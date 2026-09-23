@@ -1,7 +1,7 @@
 import { createZodDto } from 'nestjs-zod';
 import z from 'zod';
 import { BBoxSchema } from 'src/dtos/bbox.dto.js';
-import { AssetOrderBySchema, AssetOrderSchema, AssetVisibilitySchema } from 'src/enum.js';
+import { AssetOrderBySchema, AssetOrderSchema, AssetTypeSchema, AssetVisibilitySchema } from 'src/enum.js';
 import { stringToBool } from 'src/validation.js';
 
 const TimeBucketQueryBaseSchema = z
@@ -16,6 +16,7 @@ const TimeBucketQueryBaseSchema = z
     isTrashed: stringToBool
       .optional()
       .describe('Filter by trash status (true for trashed assets only, false for non-trashed only)'),
+    assetType: AssetTypeSchema.optional().describe('Filter by asset type (IMAGE, VIDEO, AUDIO, OTHER)'),
     withStacked: stringToBool
       .optional()
       .describe('Include stacked assets in the response. When true, only primary assets from stacks are returned.'),

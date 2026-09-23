@@ -1750,6 +1750,7 @@
   "purchase_settings_server_activated": "The server product key is managed by the admin",
   "query_asset_id": "Query Asset ID",
   "queue_status": "Queuing {count}/{total}",
+  "quick_stats_greeting": "Hello, {name}!",
   "rate_asset": "Rate Asset",
   "rating": "Star rating",
   "rating_clear": "Clear rating",

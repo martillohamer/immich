@@ -17,6 +17,8 @@
   import StackAction from '$lib/components/timeline/actions/StackAction.svelte';
   import TagAction from '$lib/components/timeline/actions/TagAction.svelte';
   import AssetSelectControlBar from '$lib/components/timeline/AssetSelectControlBar.svelte';
+  import QuickFilterBar from '$lib/components/timeline/QuickFilterBar.svelte';
+  import QuickStats from '$lib/components/timeline/QuickStats.svelte';
   import Timeline from '$lib/components/timeline/Timeline.svelte';
   import { AssetAction } from '$lib/constants';
   import { assetMultiSelectManager } from '$lib/managers/asset-multi-select-manager.svelte';
@@ -36,14 +38,21 @@
   import { openFileUploadDialog } from '$lib/utils/file-uploader';
   import { getAltText } from '$lib/utils/thumbnail-util';
   import { toTimelineAsset } from '$lib/utils/timeline-util';
-  import { AssetVisibility } from '@immich/sdk';
+  import { AssetTypeEnum, AssetVisibility } from '@immich/sdk';
   import { ActionButton, CommandPaletteDefaultProvider, ImageCarousel } from '@immich/ui';
   import { mdiDotsVertical } from '@mdi/js';
   import { DateTime } from 'luxon';
   import { t } from 'svelte-i18n';
 
   let timelineManager = $state<TimelineManager>() as TimelineManager;
-  const options = { visibility: AssetVisibility.Timeline, withStacked: true, withPartners: true };
+
+  let assetTypeFilter = $state<AssetTypeEnum | undefined>(undefined);
+  const options = $derived({
+    visibility: AssetVisibility.Timeline,
+    withStacked: true,
+    withPartners: true,
+    ...(assetTypeFilter && { assetType: assetTypeFilter }),
+  });
 
   let selectedAssets = $derived(assetMultiSelectManager.assets);
   let isAssetStackSelected = $derived(selectedAssets.length === 1 && !!selectedAssets[0].stack);
@@ -105,6 +114,10 @@
     onEscape={handleEscape}
     withStacked
   >
+    <div class:hidden={assetMultiSelectManager.selectionActive}>
+      <QuickStats />
+      <QuickFilterBar bind:value={assetTypeFilter} />
+    </div>
     {#if authManager.preferences.memories.enabled}
       <ImageCarousel {items} />
     {/if}
