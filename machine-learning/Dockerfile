@@ -1,0 +1,163 @@
+ARG DEVICE=cpu
+
+FROM python:3.13-slim-trixie@sha256:9d2e5553305c7c7b0097999bb17187c69b921ccd6bc9d40e4bb5ebe652c00285 AS builder-cpu
+
+FROM builder-cpu AS builder-openvino
+
+FROM builder-cpu AS builder-cuda
+
+FROM python:3.13-trixie@sha256:4a0820d8b1b1a1e012a23ff9a1296a3e28b48896a4d27a328a91ee197ce619d9 AS builder-armnn
+
+# renovate: datasource=github-releases depName=ARM-software/armnn
+ARG ARMNN_VERSION="v26.07"
+
+ENV ARMNN_PATH=/opt/armnn
+COPY ann /opt/ann
+RUN mkdir /opt/armnn && \
+    curl -SL "https://github.com/ARM-software/armnn/releases/download/${ARMNN_VERSION}/ArmNN-linux-aarch64.tar.gz" | tar -zx -C /opt/armnn && \
+    cd /opt/ann && \
+    sh build.sh
+
+FROM python:3.12-slim-trixie@sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea AS builder-rknn
+
+# Warning: 25GiB+ disk space required to pull this image
+# TODO: find a way to reduce the image size
+FROM rocm/dev-ubuntu-24.04:7.2-complete@sha256:86e11093b4a7ec2a79b1b6701d10e840a6994f21c7e05929b51eb9be361c683a AS builder-rocm
+
+FROM builder-${DEVICE} AS builder
+
+ARG DEVICE
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    VIRTUAL_ENV=/opt/venv
+
+RUN apt-get update && apt-get install -y --no-install-recommends g++
+
+COPY --from=ghcr.io/astral-sh/uv:0.8.15@sha256:a5727064a0de127bdb7c9d3c1383f3a9ac307d9f2d8a391edc7896c54289ced0 /uv /uvx /bin/
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync --frozen --extra ${DEVICE} --no-dev --no-editable --no-install-project --compile-bytecode --no-progress --active --link-mode copy
+
+FROM python:3.13-slim-trixie@sha256:9d2e5553305c7c7b0097999bb17187c69b921ccd6bc9d40e4bb5ebe652c00285 AS prod-cpu
+
+ENV MACHINE_LEARNING_MODEL_ARENA=false
+
+FROM python:3.13-slim-trixie@sha256:9d2e5553305c7c7b0097999bb17187c69b921ccd6bc9d40e4bb5ebe652c00285 AS prod-openvino
+
+RUN apt-get update && \
+    apt-get install --no-install-recommends -yqq ocl-icd-libopencl1 wget && \
+    wget -nv https://github.com/intel/intel-graphics-compiler/releases/download/v2.36.3/intel-igc-core-2_2.36.3+21719_amd64.deb && \
+    wget -nv https://github.com/intel/intel-graphics-compiler/releases/download/v2.36.3/intel-igc-opencl-2_2.36.3+21719_amd64.deb && \
+    wget -nv https://github.com/intel/compute-runtime/releases/download/26.22.38646.4/intel-opencl-icd_26.22.38646.4-0_amd64.deb &&  \
+    wget -nv https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.17537.24/intel-igc-core_1.0.17537.24_amd64.deb && \
+    wget -nv https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.17537.24/intel-igc-opencl_1.0.17537.24_amd64.deb && \
+    wget -nv https://github.com/intel/compute-runtime/releases/download/24.35.30872.36/intel-opencl-icd-legacy1_24.35.30872.36_amd64.deb && \
+    # TODO: Figure out how to get renovate to manage this differently versioned libigdgmm file
+    wget -nv https://github.com/intel/compute-runtime/releases/download/26.22.38646.4/libigdgmm12_22.10.0_amd64.deb && \
+    dpkg -i *.deb && \
+    rm *.deb && \
+    apt-get remove wget -yqq && \
+    rm -rf /var/lib/apt/lists/*
+
+FROM nvidia/cuda:12.2.2-runtime-ubuntu22.04@sha256:94c1577b2cd9dd6c0312dc04dff9cb2fdce2b268018abc3d7c2dbcacf1155000 AS prod-cuda
+
+ENV MACHINE_LEARNING_MODEL_ARENA=false
+
+RUN apt-get update && \
+    # Pascal support was dropped in 9.11
+    apt-get install --no-install-recommends -yqq libcudnn9-cuda-12=9.10.2.21-1 tzdata && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder-cuda /usr/local/bin/python3 /usr/local/bin/python3
+COPY --from=builder-cuda /usr/local/lib/python3.13 /usr/local/lib/python3.13
+COPY --from=builder-cuda /usr/local/lib/libpython3.13.so /usr/local/lib/libpython3.13.so
+
+FROM rocm/dev-ubuntu-24.04:7.2-complete@sha256:86e11093b4a7ec2a79b1b6701d10e840a6994f21c7e05929b51eb9be361c683a AS prod-rocm
+
+RUN apt-get update && apt-get install --no-install-recommends -yqq migraphx miopen-hip && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+FROM prod-cpu AS prod-armnn
+
+ENV LD_LIBRARY_PATH=/opt/armnn \
+    MACHINE_LEARNING_MODEL_ARENA=false
+
+RUN apt-get update && apt-get install -y --no-install-recommends ocl-icd-libopencl1 mesa-opencl-icd libgomp1 && \
+    rm -rf /var/lib/apt/lists/* && \
+    mkdir --parents /etc/OpenCL/vendors && \
+    echo "/usr/lib/libmali.so" > /etc/OpenCL/vendors/mali.icd && \
+    mkdir /opt/armnn
+
+COPY --from=builder-armnn \
+    /opt/armnn/libarmnn.so.?? \
+    /opt/armnn/libarmnnDeserializer.so.?? \
+    /opt/armnn/libprotobuf.so.?.??.?.? \
+    /opt/ann/libann.s[o] \
+    /opt/ann/build.sh \
+    /opt/armnn/
+
+FROM python:3.12-slim-trixie@sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea AS prod-rknn
+
+# renovate: datasource=github-tags depName=airockchip/rknn-toolkit2
+ARG RKNN_TOOLKIT_VERSION="v2.3.0"
+
+ENV MACHINE_LEARNING_MODEL_ARENA=false
+
+ADD --chmod=644 --checksum=sha256:73993ed4b440460825f21611731564503cc1d5a0c123746477da6cd574f34885 "https://github.com/airockchip/rknn-toolkit2/raw/refs/tags/${RKNN_TOOLKIT_VERSION}/rknpu2/runtime/Linux/librknn_api/aarch64/librknnrt.so" /usr/lib/
+
+FROM prod-${DEVICE} AS prod
+
+ARG DEVICE
+
+RUN MIMALLOC=$(case "$DEVICE" in cuda) echo "libmimalloc2.0";; openvino|rocm);; *) echo "libmimalloc3";; esac); \
+    apt-get update && \
+    apt-get install -y --no-install-recommends tini ccache libgl1 libglib2.0-0 libgomp1 $MIMALLOC && \
+    apt-get autoremove -yqq && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    { [ -z "$MIMALLOC" ] || ls /usr/lib/*-linux-gnu/libmimalloc.so.? > /etc/ld.so.preload; }
+
+WORKDIR /usr/src
+ENV TRANSFORMERS_CACHE=/cache \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/opt/venv/bin:$PATH" \
+    PYTHONPATH=/usr/src \
+    DEVICE=${DEVICE} \
+    VIRTUAL_ENV=/opt/venv \
+    MACHINE_LEARNING_CACHE_FOLDER=/cache
+
+# prevent core dumps
+RUN echo "hard core 0" >> /etc/security/limits.conf && \
+    echo "fs.suid_dumpable 0" >> /etc/sysctl.conf && \
+    echo 'ulimit -S -c 0 > /dev/null 2>&1' >> /etc/profile
+
+COPY --from=builder /opt/venv /opt/venv
+COPY scripts/healthcheck.py .
+COPY immich_ml immich_ml
+
+ARG BUILD_ID
+ARG BUILD_IMAGE
+ARG BUILD_SOURCE_REF
+ARG BUILD_SOURCE_COMMIT
+
+ENV IMMICH_BUILD=${BUILD_ID}
+ENV IMMICH_BUILD_URL=https://github.com/immich-app/immich/actions/runs/${BUILD_ID}
+ENV IMMICH_BUILD_IMAGE=${BUILD_IMAGE}
+ENV IMMICH_BUILD_IMAGE_URL=https://github.com/immich-app/immich/pkgs/container/immich-machine-learning
+ENV IMMICH_REPOSITORY=immich-app/immich
+ENV IMMICH_REPOSITORY_URL=https://github.com/immich-app/immich
+ENV IMMICH_SOURCE_REF=${BUILD_SOURCE_REF}
+ENV IMMICH_SOURCE_COMMIT=${BUILD_SOURCE_COMMIT}
+ENV IMMICH_SOURCE_URL=https://github.com/immich-app/immich/commit/${BUILD_SOURCE_COMMIT}
+
+# store huggingface in /cache subfolder to enable rootless deployment with a single volume
+ENV HF_HOME=/cache/hf-cache
+
+ENTRYPOINT ["tini", "--"]
+CMD ["python", "-m", "immich_ml"]
+
+HEALTHCHECK CMD python3 healthcheck.py
