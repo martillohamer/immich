@@ -2,8 +2,9 @@ import '@testing-library/jest-dom';
 import { render, screen, waitFor } from '@testing-library/svelte';
 import { init, register, waitLocale } from 'svelte-i18n';
 import { AssetTypeEnum, AssetVisibility } from '@immich/sdk';
-  import { sdkMock } from '$lib/__mocks__/sdk.mock';
-  import QuickFilterBar from './QuickFilterBar.svelte';
+import { sdkMock } from '$lib/__mocks__/sdk.mock';
+import { invalidateTimelineStats } from '$lib/services/asset-statistics.service';
+import QuickFilterBar from './QuickFilterBar.svelte';
 
 describe('QuickFilterBar component', () => {
   beforeAll(async () => {
@@ -14,6 +15,7 @@ describe('QuickFilterBar component', () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
+    invalidateTimelineStats();
     sdkMock.getAssetStatistics.mockResolvedValue({ images: 0, videos: 0, total: 0 });
   });
 

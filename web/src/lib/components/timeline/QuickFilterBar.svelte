@@ -1,10 +1,11 @@
 <script lang="ts">
-  import { AssetTypeEnum, AssetVisibility, getAssetStatistics, type AssetStatsResponseDto } from '@immich/sdk';
+  import { AssetTypeEnum, type AssetStatsResponseDto } from '@immich/sdk';
   import { Icon } from '@immich/ui';
   import { mdiImageMultiple, mdiLoading, mdiPlayCircle, mdiViewGridOutline } from '@mdi/js';
   import { onMount } from 'svelte';
   import { fade } from 'svelte/transition';
   import { t } from 'svelte-i18n';
+  import { getTimelineStats } from '$lib/services/asset-statistics.service';
 
   interface Props {
     value?: AssetTypeEnum;
@@ -16,7 +17,7 @@
   let stats = $state<AssetStatsResponseDto | undefined>(undefined);
 
   onMount(() => {
-    getAssetStatistics({ visibility: AssetVisibility.Timeline })
+    getTimelineStats()
       .then((measured) => {
         stats = measured;
       })

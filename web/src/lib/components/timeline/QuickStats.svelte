@@ -1,7 +1,8 @@
 <script lang="ts">
   import ServerStatisticsCard from '$lib/components/server-statistics/ServerStatisticsCard.svelte';
   import { authManager } from '$lib/managers/auth-manager.svelte';
-  import { AssetVisibility, getAssetStatistics, type AssetStatsResponseDto } from '@immich/sdk';
+  import { getTimelineStats } from '$lib/services/asset-statistics.service';
+  import { type AssetStatsResponseDto } from '@immich/sdk';
   import { Text } from '@immich/ui';
   import { mdiCameraIris, mdiImageMultiple, mdiPlayCircle } from '@mdi/js';
   import { onMount } from 'svelte';
@@ -12,7 +13,7 @@
   let statsPromise = $state<Promise<AssetStatsResponseDto> | undefined>(undefined);
 
   onMount(() => {
-    statsPromise = getAssetStatistics({ visibility: AssetVisibility.Timeline });
+    statsPromise = getTimelineStats();
   });
 
   const photosPromise = $derived.by(() => statsPromise?.then((stats) => ({ value: stats.images })) ?? pending);
