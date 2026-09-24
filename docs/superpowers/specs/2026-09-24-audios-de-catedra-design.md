@@ -231,7 +231,7 @@ La `SearchBar` general ya dispara metadata search y el OCR ya indexa texto libre
 
 ## Verificación global
 
-- `mvn` n/a (stack NestJS) — se usa la suite del repo:
+- Este fork es NestJS (no Maven/Gradle): se usa la suite nativa del repo (guía técnica en `AGENTS.md` de este repositorio, no el de workspace de otro proyecto):
   - `cd server && npm run test` (specs de `transcription.*` + `search.repository`).
   - `cd machine-learning && python -m pytest tests/test_main.py`.
   - `cd web && npx vitest run src/lib/components/asset-viewer/AudioViewer.spec.ts && npx svelte-check && npx eslint src/lib/components/asset-viewer/AudioViewer.svelte --max-warnings 0`.
