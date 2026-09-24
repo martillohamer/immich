@@ -42,6 +42,7 @@
   import { ActionButton, CommandPaletteDefaultProvider, ImageCarousel } from '@immich/ui';
   import { mdiDotsVertical } from '@mdi/js';
   import { DateTime } from 'luxon';
+  import { fade } from 'svelte/transition';
   import { t } from 'svelte-i18n';
 
   let timelineManager = $state<TimelineManager>() as TimelineManager;
@@ -53,6 +54,8 @@
     withPartners: true,
     ...(assetTypeFilter && { assetType: assetTypeFilter }),
   });
+
+  const isTimelineLoading = $derived(!timelineManager.isInitialized);
 
   let selectedAssets = $derived(assetMultiSelectManager.assets);
   let isAssetStackSelected = $derived(selectedAssets.length === 1 && !!selectedAssets[0].stack);
@@ -115,8 +118,12 @@
     withStacked
   >
     <div class:hidden={assetMultiSelectManager.selectionActive}>
-      <QuickStats />
-      <QuickFilterBar bind:value={assetTypeFilter} />
+      {#key assetTypeFilter}
+        <div transition:fade={{ duration: 150 }}>
+          <QuickStats />
+          <QuickFilterBar bind:value={assetTypeFilter} loading={isTimelineLoading} />
+        </div>
+      {/key}
     </div>
     {#if authManager.preferences.memories.enabled}
       <ImageCarousel {items} />

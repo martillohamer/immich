@@ -26,6 +26,7 @@
   import { type AlbumResponseDto, type PersonResponseDto, type UserResponseDto } from '@immich/sdk';
   import { DateTime } from 'luxon';
   import { onDestroy, onMount, tick, type Snippet } from 'svelte';
+  import { fade } from 'svelte/transition';
   import type { UpdatePayload } from 'vite';
 
   interface Props {
@@ -605,6 +606,7 @@
 <!-- Right margin MUST be equal to the width of scrubber -->
 <section
   id="asset-grid"
+  aria-busy={!timelineManager.isInitialized}
   class={['h-full scrollbar-hidden overflow-y-auto outline-none', { 'm-0': isEmpty }, { 'ms-0': !isEmpty }]}
   style:margin-inline-end={(usingMobileDevice ? 0 : scrubberWidth) + 'px'}
   tabindex="-1"
@@ -643,6 +645,7 @@
           style:position="absolute"
           style:transform={`translate3d(0,${absoluteHeight}px,0)`}
           style:width="100%"
+          transition:fade={{ duration: 150 }}
         >
           <Skeleton {invisible} height={timelineMonth.height} title={timelineMonth.title} />
         </div>
