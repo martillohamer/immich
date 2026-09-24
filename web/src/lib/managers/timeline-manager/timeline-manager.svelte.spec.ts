@@ -888,6 +888,49 @@ describe('TimelineManager', () => {
     });
   });
 
+  describe('updateOptions - stale write', () => {
+    let timelineManager: TimelineManager;
+
+    beforeEach(() => {
+      vi.resetAllMocks();
+      timelineManager = new TimelineManager();
+    });
+
+    it('discards months from a stale init when options change mid-flight', async () => {
+      let resolveFirst!: (value: { count: number; timeBucket: string }[]) => void;
+      let resolveSecond!: (value: { count: number; timeBucket: string }[]) => void;
+
+      const firstRequest = new Promise<{ count: number; timeBucket: string }[]>((resolve) => (resolveFirst = resolve));
+      const secondRequest = new Promise<{ count: number; timeBucket: string }[]>((resolve) => (resolveSecond = resolve));
+
+      sdkMock.getTimeBuckets
+        .mockReturnValueOnce(firstRequest)
+        .mockReturnValueOnce(secondRequest);
+
+      const firstUpdate = timelineManager.updateOptions({ albumId: 'album-a' });
+      await tick();
+      await Promise.resolve();
+
+      const secondUpdate = timelineManager.updateOptions({ albumId: 'album-b' });
+      await tick();
+      await Promise.resolve();
+
+      // Resolve normally but in reverse: the active request settles first,
+      // then the stale request (which must be discarded).
+      resolveSecond([{ count: 1, timeBucket: '2024-03-01' }]);
+      await secondUpdate;
+      await tick();
+
+      resolveFirst([{ count: 1, timeBucket: '2020-01-01' }]);
+      await firstUpdate;
+      await tick();
+
+      expect(timelineManager.months.length).toBe(1);
+      expect(timelineManager.months[0].yearMonth.year).toBe(2024);
+      expect(timelineManager.months[0].yearMonth.month).toBe(3);
+    });
+  });
+
   describe('retrieveRange', () => {
     it('uses createdAt ordering in the Recently Added view (orderBy=CreatedAt)', async () => {
       // Simulate the "Recently Added" bug: two assets whose localDateTime order is

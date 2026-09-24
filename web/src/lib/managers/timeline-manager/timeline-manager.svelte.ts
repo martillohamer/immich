@@ -251,11 +251,15 @@ export class TimelineManager extends VirtualScrollManager {
     }
   }
 
-  async #initializeTimelineMonths() {
+  async #initializeTimelineMonths(signal: AbortSignal) {
     const timebuckets = await getTimeBuckets({
       ...authManager.params,
       ...this.#options,
     });
+
+    if (signal.aborted) {
+      return;
+    }
 
     this.months = timebuckets.map((timeBucket) => {
       const date = new SvelteDate(timeBucket.timeBucket);
@@ -283,22 +287,24 @@ export class TimelineManager extends VirtualScrollManager {
     this.suspendTransitions = true;
     try {
       await this.initTask.reset();
-      await this.#init(options);
-      this.updateViewportGeometry(false);
-      this.#createScrubberMonths();
+      if (await this.#init(options)) {
+        this.updateViewportGeometry(false);
+        this.#createScrubberMonths();
+      }
     } finally {
       this.suspendTransitions = false;
     }
   }
 
-  async #init(options: TimelineManagerOptions) {
+  async #init(options: TimelineManagerOptions): Promise<boolean> {
     this.isInitialized = false;
     this.months = [];
     this.albumAssets.clear();
-    await this.initTask.execute(async () => {
+    const status = await this.initTask.execute(async (signal) => {
       this.#options = options;
-      await this.#initializeTimelineMonths();
+      await this.#initializeTimelineMonths(signal);
     }, true);
+    return ['LOADED', 'DONE', 'WAITED'].includes(status);
   }
 
   public override destroy() {
