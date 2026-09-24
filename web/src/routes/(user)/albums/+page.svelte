@@ -2,9 +2,9 @@
   import { scrollMemory } from '$lib/actions/scroll-memory';
   import AlbumsControls from './AlbumsControls.svelte';
   import Albums from '$lib/components/album-page/AlbumsList.svelte';
+  import AlbumFilterTabs from '$lib/components/album-page/AlbumFilterTabs.svelte';
   import UserPageLayout from '$lib/components/layouts/UserPageLayout.svelte';
   import EmptyPlaceholder from '$lib/components/shared-components/EmptyPlaceholder.svelte';
-  import GroupTab from '$lib/elements/GroupTab.svelte';
   import SearchBar from '$lib/elements/SearchBar.svelte';
   import { Route } from '$lib/route';
   import { AlbumFilter, albumViewSettings } from '$lib/stores/preferences.store';
@@ -31,7 +31,7 @@
 
   <div class="xl:hidden">
     <div class="h-14 w-fit py-2 dark:text-immich-dark-fg">
-      <GroupTab
+      <AlbumFilterTabs
         label={$t('show_albums')}
         filters={Object.keys(AlbumFilter)}
         selected={$albumViewSettings.filter}

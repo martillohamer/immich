@@ -1,7 +1,7 @@
 <script lang="ts">
   import Dropdown from '$lib/elements/Dropdown.svelte';
-  import GroupTab from '$lib/elements/GroupTab.svelte';
   import SearchBar from '$lib/elements/SearchBar.svelte';
+  import AlbumFilterTabs from '$lib/components/album-page/AlbumFilterTabs.svelte';
   import {
     AlbumFilter,
     AlbumGroupBy,
@@ -114,7 +114,7 @@
 
 <!-- Filter Albums by Sharing Status (All, Owned, Shared) -->
 <div class="hidden h-10 xl:block">
-  <GroupTab
+  <AlbumFilterTabs
     label={$t('show_albums')}
     filters={Object.values(albumFilterNames)}
     selected={selectedFilterOption}
