@@ -54,6 +54,7 @@ import { SyncRepository } from 'src/repositories/sync.repository.js';
 import { SystemMetadataRepository } from 'src/repositories/system-metadata.repository.js';
 import { TagRepository } from 'src/repositories/tag.repository.js';
 import { TelemetryRepository } from 'src/repositories/telemetry.repository.js';
+import { TranscriptionRepository } from 'src/repositories/transcription.repository.js';
 import { TrashRepository } from 'src/repositories/trash.repository.js';
 import { UserRepository } from 'src/repositories/user.repository.js';
 import { VersionHistoryRepository } from 'src/repositories/version-history.repository.js';
@@ -114,6 +115,7 @@ export const BASE_SERVICE_DEPENDENCIES = [
   SystemMetadataRepository,
   TagRepository,
   TelemetryRepository,
+  TranscriptionRepository,
   TrashRepository,
   UserRepository,
   VersionHistoryRepository,
@@ -176,6 +178,7 @@ export class BaseService {
     protected systemMetadataRepository: SystemMetadataRepository,
     protected tagRepository: TagRepository,
     protected telemetryRepository: TelemetryRepository,
+    protected transcriptionRepository: TranscriptionRepository,
     protected trashRepository: TrashRepository,
     protected userRepository: UserRepository,
     protected versionRepository: VersionHistoryRepository,
@@ -247,6 +250,7 @@ export class BaseService {
       ctx.systemMetadataRepository,
       ctx.tagRepository,
       ctx.telemetryRepository,
+      ctx.transcriptionRepository,
       ctx.trashRepository,
       ctx.userRepository,
       ctx.versionRepository,

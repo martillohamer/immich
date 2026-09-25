@@ -67,6 +67,7 @@ import { SyncRepository } from 'src/repositories/sync.repository.js';
 import { SystemMetadataRepository } from 'src/repositories/system-metadata.repository.js';
 import { TagRepository } from 'src/repositories/tag.repository.js';
 import { TelemetryRepository } from 'src/repositories/telemetry.repository.js';
+import { TranscriptionRepository } from 'src/repositories/transcription.repository.js';
 import { TrashRepository } from 'src/repositories/trash.repository.js';
 import { UserRepository } from 'src/repositories/user.repository.js';
 import { VersionHistoryRepository } from 'src/repositories/version-history.repository.js';
@@ -280,6 +281,7 @@ export type ServiceOverrides = {
   systemMetadata: SystemMetadataRepository;
   tag: TagRepository;
   telemetry: TelemetryRepository;
+  transcription: TranscriptionRepository;
   trash: TrashRepository;
   user: UserRepository;
   versionHistory: VersionHistoryRepository;
@@ -369,6 +371,7 @@ export const getMocks = () => {
     // eslint-disable-next-line no-sparse-arrays
     tag: automock(TagRepository, { args: [, loggerMock], strict: false }),
     telemetry: newTelemetryRepositoryMock(),
+    transcription: automock(TranscriptionRepository, { strict: false }),
     trash: automock(TrashRepository),
     user: automock(UserRepository, { strict: false }),
     versionHistory: automock(VersionHistoryRepository),
@@ -440,6 +443,7 @@ export const newTestService = <T extends BaseService>(
     overrides.systemMetadata || (mocks.systemMetadata as As<SystemMetadataRepository>),
     overrides.tag || (mocks.tag as As<TagRepository>),
     overrides.telemetry || (mocks.telemetry as unknown as TelemetryRepository),
+    overrides.transcription || (mocks.transcription as As<TranscriptionRepository>),
     overrides.trash || (mocks.trash as As<TrashRepository>),
     overrides.user || (mocks.user as As<UserRepository>),
     overrides.versionHistory || (mocks.versionHistory as As<VersionHistoryRepository>),

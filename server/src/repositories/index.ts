@@ -46,6 +46,7 @@ import { SyncRepository } from 'src/repositories/sync.repository.js';
 import { SystemMetadataRepository } from 'src/repositories/system-metadata.repository.js';
 import { TagRepository } from 'src/repositories/tag.repository.js';
 import { TelemetryRepository } from 'src/repositories/telemetry.repository.js';
+import { TranscriptionRepository } from 'src/repositories/transcription.repository.js';
 import { TrashRepository } from 'src/repositories/trash.repository.js';
 import { UserRepository } from 'src/repositories/user.repository.js';
 import { VersionHistoryRepository } from 'src/repositories/version-history.repository.js';
@@ -103,6 +104,7 @@ export const repositories = [
   SystemMetadataRepository,
   TagRepository,
   TelemetryRepository,
+  TranscriptionRepository,
   TrashRepository,
   UserRepository,
   ViewRepository,

@@ -103,6 +103,14 @@ export const systemConfigStub = {
       enabled: false,
     },
   },
+  machineLearningTranscriptionDisabled: {
+    machineLearning: {
+      enabled: true,
+      transcription: {
+        enabled: false,
+      },
+    },
+  },
   machineLearningEnabled: {
     machineLearning: {
       enabled: true,
