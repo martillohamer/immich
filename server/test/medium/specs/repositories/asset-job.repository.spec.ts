@@ -1,5 +1,5 @@
 import { Kysely } from 'kysely';
-import { AssetFileType } from 'src/enum.js';
+import { AssetFileType, AssetVisibility } from 'src/enum.js';
 import { AssetJobRepository } from 'src/repositories/asset-job.repository.js';
 import { LoggingRepository } from 'src/repositories/logging.repository.js';
 import { DB } from 'src/schema/index.js';
@@ -137,6 +137,88 @@ describe(AssetJobRepository.name, () => {
         expect.objectContaining({
           previewFile: 'preview_unedited.jpg',
         }),
+      );
+    });
+  });
+
+  describe('getForTranscription', () => {
+    it('should return the original path and fields', async () => {
+      const { ctx, sut } = setup();
+      const { user } = await ctx.newUser();
+      const { asset } = await ctx.newAsset({
+        ownerId: user.id,
+        originalFileName: 'catedra.mp3',
+        originalPath: '/path/to/catedra.mp3',
+        visibility: AssetVisibility.Archive,
+      });
+
+      const result = await sut.getForTranscription(asset.id);
+
+      expect(result).toEqual(
+        expect.objectContaining({
+          visibility: AssetVisibility.Archive,
+          ownerId: user.id,
+          originalFileName: 'catedra.mp3',
+          originalPath: '/path/to/catedra.mp3',
+        }),
+      );
+    });
+
+    it('should return undefined for a non-existent asset', async () => {
+      const { sut } = setup();
+
+      const result = await sut.getForTranscription('00000000-0000-4000-8000-000000000000');
+
+      expect(result).toBeUndefined();
+    });
+  });
+
+  describe('streamForTranscriptionJob', () => {
+    it('should work', async () => {
+      const { sut } = setup();
+      const stream = sut.streamForTranscriptionJob(false);
+      await expect(consume(stream)).resolves.toEqual(expect.any(Array));
+    });
+
+    it('should queue an asset without a transcript', async () => {
+      const { ctx, sut } = setup();
+      const { user } = await ctx.newUser();
+      const { asset } = await ctx.newAsset({ ownerId: user.id });
+      await ctx.newJobStatus({ assetId: asset.id });
+
+      const stream = sut.streamForTranscriptionJob(false);
+      await expect(consume(stream)).resolves.toEqual(
+        expect.arrayContaining([expect.objectContaining({ id: asset.id })]),
+      );
+    });
+
+    it('should skip an asset that already has a transcript', async () => {
+      const { ctx, sut } = setup();
+      const { user } = await ctx.newUser();
+      const { asset } = await ctx.newAsset({ ownerId: user.id });
+      await ctx.newJobStatus({ assetId: asset.id });
+      await ctx.database
+        .updateTable('asset_job_status')
+        .set({ transcribedAt: new Date() })
+        .where('assetId', '=', asset.id)
+        .execute();
+
+      const stream = sut.streamForTranscriptionJob(false);
+      await expect(consume(stream)).resolves.not.toEqual(
+        expect.arrayContaining([expect.objectContaining({ id: asset.id })]),
+      );
+    });
+
+    it('should skip deleted assets', async () => {
+      const { ctx, sut } = setup();
+      const { user } = await ctx.newUser();
+      const { asset } = await ctx.newAsset({ ownerId: user.id });
+      await ctx.newJobStatus({ assetId: asset.id });
+      await ctx.softDeleteAsset(asset.id);
+
+      const stream = sut.streamForTranscriptionJob(false);
+      await expect(consume(stream)).resolves.not.toEqual(
+        expect.arrayContaining([expect.objectContaining({ id: asset.id })]),
       );
     });
   });
