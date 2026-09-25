@@ -193,6 +193,7 @@ const AdminConfigSchemaWithVisibility = z
         library: AdminConfigJobSettingsSchema,
         notifications: AdminConfigJobSettingsSchema,
         ocr: AdminConfigJobSettingsSchema,
+        transcription: AdminConfigJobSettingsSchema,
         workflow: AdminConfigJobSettingsSchema,
         editor: AdminConfigJobSettingsSchema,
         integrityCheck: AdminConfigJobSettingsSchema,
@@ -258,6 +259,7 @@ const AdminConfigSchemaWithVisibility = z
             .describe('Minimum confidence score for text recognition')
             .meta({ format: 'double' }),
         }).meta({ id: 'AdminConfigOcrDto' }),
+        transcription: AdminConfigMachineLearningModelSchema.meta({ id: 'AdminConfigTranscriptionDto' }),
       })
       .meta({ id: 'AdminConfigMachineLearningDto' }),
     map: z
@@ -608,6 +610,7 @@ export const defaults = Object.freeze<SystemConfig>({
     library: { concurrency: 5 },
     notifications: { concurrency: 5 },
     ocr: { concurrency: 1 },
+    transcription: { concurrency: 1 },
     workflow: { concurrency: 5 },
     editor: { concurrency: 2 },
     integrityCheck: { concurrency: 1 },
@@ -645,6 +648,10 @@ export const defaults = Object.freeze<SystemConfig>({
       minDetectionScore: 0.5,
       minRecognitionScore: 0.8,
       maxResolution: 736,
+    },
+    transcription: {
+      enabled: true,
+      modelName: 'small',
     },
   },
   map: {
