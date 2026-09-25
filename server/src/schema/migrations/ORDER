@@ -95,3 +95,6 @@
 1787148183729-ClusterGroups
 1787148183730-DeleteMismatchedMemoryAssets
 1789419229196-ConvertUserOAuthIdEmptyStringToNull
+1789419229197-CreateAssetTranscriptTable
+1789419229198-CreateTranscriptSearchTable
+1789419229199-UpsertTranscriptAssetJobStatus
