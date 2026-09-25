@@ -1,3 +1,4 @@
+import { AssetType } from 'src/enum.js';
 import { mimeTypes } from 'src/utils/mime-types.js';
 
 describe('mimeTypes', () => {
@@ -226,6 +227,47 @@ describe('mimeTypes', () => {
     for (const [extension, v] of Object.entries(mimeTypes.video)) {
       it(`should lookup ${extension}`, () => {
         expect(mimeTypes.lookup(`test.${extension}`)).toEqual(v[0]);
+      });
+    }
+  });
+
+  describe('audio', () => {
+    it('should contain only lowercase mime types', () => {
+      const keys = Object.keys(mimeTypes.audio);
+      expect(keys).toEqual(keys.map((mimeType) => mimeType.toLowerCase()));
+
+      const values = Object.values(mimeTypes.audio).flat();
+      expect(values).toEqual(values.map((mimeType) => mimeType.toLowerCase()));
+    });
+
+    it('should be a sorted list', () => {
+      const keys = Object.keys(mimeTypes.audio);
+      expect(keys).toEqual(keys.toSorted());
+    });
+
+    it('should contain only audio mime types', () => {
+      const values = Object.values(mimeTypes.audio).flat();
+      expect(values).toEqual(values.filter((mimeType) => mimeType.startsWith('audio/')));
+    });
+
+    for (const [extension, v] of Object.entries(mimeTypes.audio)) {
+      it(`should lookup ${extension}`, () => {
+        expect(mimeTypes.lookup(`test.${extension}`)).toEqual(v[0]);
+      });
+    }
+  });
+
+  describe('assetType', () => {
+    for (const [filename, type] of [
+      ['a.mp3', AssetType.Audio],
+      ['a.wav', AssetType.Audio],
+      ['a.m4a', AssetType.Audio],
+      ['a.ogg', AssetType.Audio],
+      ['a.aac', AssetType.Audio],
+      ['a.flac', AssetType.Audio],
+    ]) {
+      it(`should return ${AssetType.Audio} for ${filename}`, () => {
+        expect(mimeTypes.assetType(filename)).toBe(type);
       });
     }
   });

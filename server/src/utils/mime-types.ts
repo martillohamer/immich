@@ -130,7 +130,16 @@ const sidecar: Record<string, string[]> = {
   '.xmp': ['application/xml', 'text/xml'],
 };
 
-const types = { ...image, ...video, ...sidecar };
+const audio: Record<string, string[]> = {
+  '.aac': ['audio/aac'],
+  '.flac': ['audio/flac'],
+  '.m4a': ['audio/mp4'],
+  '.mp3': ['audio/mpeg'],
+  '.ogg': ['audio/ogg'],
+  '.wav': ['audio/wav'],
+};
+
+const types = { ...image, ...video, ...audio, ...sidecar };
 
 const isType = (filename: string, r: Record<string, string[]>) =>
   Object.hasOwn(r, getFilenameExtension(filename).toLowerCase());
@@ -149,10 +158,11 @@ export const mimeTypes = {
   profile,
   sidecar,
   video,
+  audio,
   raw,
   webUnsupportedImage,
 
-  isAsset: (filename: string) => isType(filename, image) || isType(filename, video),
+  isAsset: (filename: string) => isType(filename, image) || isType(filename, video) || isType(filename, audio),
   isImage: (filename: string) => isType(filename, image),
   isWebSupportedImage: (filename: string) => isType(filename, webSupportedImage),
   isHeifImage: (filename: string) => isType(filename, heifImage),
@@ -160,6 +170,7 @@ export const mimeTypes = {
   isProfile: (filename: string) => isType(filename, profile),
   isSidecar: (filename: string) => isType(filename, sidecar),
   isVideo: (filename: string) => isType(filename, video),
+  isAudio: (filename: string) => isType(filename, audio),
   canBeTransparent: (filename: string) =>
     transparentCapableExtensions.has(getFilenameExtension(filename).toLowerCase()),
   isRaw: (filename: string) => isType(filename, raw),
@@ -176,7 +187,11 @@ export const mimeTypes = {
       return AssetType.Video;
     }
 
+    if (contentType.startsWith('audio/')) {
+      return AssetType.Audio;
+    }
+
     return AssetType.Other;
   },
-  getSupportedFileExtensions: () => [...Object.keys(image), ...Object.keys(video)],
+  getSupportedFileExtensions: () => [...Object.keys(image), ...Object.keys(video), ...Object.keys(audio)],
 };
