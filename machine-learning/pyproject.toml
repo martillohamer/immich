@@ -8,6 +8,7 @@ readme = "README.md"
 dependencies = [
     "aiocache>=0.12.1,<1.0",
     "fastapi>=0.95.2,<1.0",
+    "faster-whisper>=1.1.0",
     "gunicorn>=21.1.0",
     "huggingface-hub>=1.0,<2.0",
     "numpy>=2.4.0,<3.0",

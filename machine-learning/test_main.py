@@ -1528,3 +1528,140 @@ class TestPredictionEndpoints:
             parsed_embedding = orjson.loads(embedding)
             assert np.allclose(expected_face["embedding"], parsed_embedding)
             assert np.allclose(expected_face["score"], actual_face["score"])
+
+
+def transcribe_segment(start: float, end: float, text: str) -> SimpleNamespace:
+    return SimpleNamespace(start=start, end=end, text=text)
+
+
+class TestTranscribeEndpoint:
+    def test_transcribe_happy_path(self, deployed_app: TestClient, mocker: MockerFixture) -> None:
+        mocked = mocker.patch("immich_ml.main.transcribe_audio")
+        mocked.return_value = {
+            "text": "hola mundo.",
+            "segments": [{"start": 0.0, "end": 2.5, "text": "hola"}, {"start": 2.5, "end": 4.0, "text": "mundo."}],
+            "language": "es",
+            "model": "small",
+        }
+
+        response = deployed_app.post(
+            "http://localhost:3003/transcribe",
+            files={"audio": b"fake audio bytes"},
+            data={"model": "small", "language": "es"},
+        )
+
+        assert response.status_code == 200
+        body = response.json()
+        assert isinstance(body, dict)
+        assert body == {
+            "text": "hola mundo.",
+            "segments": [{"start": 0.0, "end": 2.5, "text": "hola"}, {"start": 2.5, "end": 4.0, "text": "mundo."}],
+            "language": "es",
+            "model": "small",
+        }
+        mocked.assert_called_once_with(b"fake audio bytes", "small", "es")
+
+    def test_transcribe_defaults_model_and_language(self, deployed_app: TestClient, mocker: MockerFixture) -> None:
+        mocked = mocker.patch("immich_ml.main.transcribe_audio")
+        mocked.return_value = {"text": "", "segments": [], "language": "es", "model": "small"}
+
+        response = deployed_app.post(
+            "http://localhost:3003/transcribe",
+            files={"audio": b"fake audio bytes"},
+        )
+
+        assert response.status_code == 200
+        mocked.assert_called_once_with(b"fake audio bytes", None, None)
+
+    def test_transcribe_rejects_empty_audio(self, deployed_app: TestClient) -> None:
+        response = deployed_app.post(
+            "http://localhost:3003/transcribe",
+            files={"audio": b""},
+        )
+
+        assert response.status_code == 400
+
+    def test_transcribe_rejects_missing_audio(self, deployed_app: TestClient) -> None:
+        response = deployed_app.post("http://localhost:3003/transcribe")
+
+        assert response.status_code == 422
+
+    def test_transcribe_returns_500_on_failure(self, deployed_app: TestClient, mocker: MockerFixture) -> None:
+        mocked = mocker.patch("immich_ml.main.transcribe_audio")
+        mocked.side_effect = RuntimeError("boom")
+
+        response = deployed_app.post(
+            "http://localhost:3003/transcribe",
+            files={"audio": b"fake audio bytes"},
+        )
+
+        assert response.status_code == 500
+
+
+class TestTranscribe:
+    def test_transcribes_audio_and_joins_segments(self, mocker: MockerFixture) -> None:
+        from immich_ml import transcribe
+
+        transcribe._transcription_models.clear()
+        whisper_model = mocker.patch("immich_ml.transcribe.WhisperModel").return_value
+        whisper_model.transcribe.return_value = (
+            [
+                transcribe_segment(0.0, 2.5, "Hola "),
+                transcribe_segment(2.5, 4.125, " mundo."),
+            ],
+            SimpleNamespace(language="es"),
+        )
+
+        result = transcribe.transcribe_audio(b"fake audio bytes", "small", "es")
+
+        assert result == {
+            "text": "Hola mundo.",
+            "segments": [
+                {"start": 0.0, "end": 2.5, "text": "Hola"},
+                {"start": 2.5, "end": 4.125, "text": "mundo."},
+            ],
+            "language": "es",
+            "model": "small",
+        }
+
+    def test_transcribes_uses_defaults_from_settings(self, mocker: MockerFixture) -> None:
+        from immich_ml import transcribe
+
+        transcribe._transcription_models.clear()
+        whisper_model_cls = mocker.patch("immich_ml.transcribe.WhisperModel")
+        whisper_model_cls.return_value.transcribe.return_value = ([], SimpleNamespace(language="es"))
+
+        result = transcribe.transcribe_audio(b"fake audio bytes", None, None)
+
+        whisper_model_cls.assert_called_once_with(
+            "small",
+            device="cpu",
+            compute_type="int8",
+            download_root=settings.cache_folder,
+        )
+        whisper_model_cls.return_value.transcribe.assert_called_once()
+        transcribe_call = whisper_model_cls.return_value.transcribe.call_args
+        audio_arg = transcribe_call.args[0]
+        assert isinstance(audio_arg, BytesIO)
+        assert audio_arg.getvalue() == b"fake audio bytes"
+        assert transcribe_call.kwargs == {
+            "language": "es",
+            "vad_filter": True,
+            "without_timestamps": False,
+        }
+        assert result["language"] == "es"
+        assert result["model"] == "small"
+        assert result["text"] == ""
+
+    def test_transcribes_caches_model_in_memory(self, mocker: MockerFixture) -> None:
+        from immich_ml import transcribe
+
+        transcribe._transcription_models.clear()
+        whisper_model_cls = mocker.patch("immich_ml.transcribe.WhisperModel")
+        whisper_model_cls.return_value.transcribe.return_value = ([], SimpleNamespace(language="es"))
+
+        transcribe.transcribe_audio(b"a", "small", "es")
+        transcribe.transcribe_audio(b"b", "small", "es")
+        transcribe.transcribe_audio(b"c", "large-v2", "es")
+
+        assert whisper_model_cls.call_count == 2

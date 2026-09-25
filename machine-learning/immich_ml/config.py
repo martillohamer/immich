@@ -72,6 +72,11 @@ class Settings(BaseSettings):
     rknn_threads: int = 1
     preload: PreloadModelData | None = None
     max_batch_size: MaxBatchSize | None = None
+    transcription_model: str = "small"
+    transcription_language: str = "es"
+    transcription_device: str = "cpu"
+    transcription_compute_type: str = "int8"
+    transcription_vad_filter: bool = True
     openvino_precision: ModelPrecision = ModelPrecision.FP32
     rocm_precision: ModelPrecision = ModelPrecision.FP32
 

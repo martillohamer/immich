@@ -1,11 +1,94 @@
-# HANDOFF — Inmich fork local (`web/`)
+# HANDOFF — Inmich fork local (`web/` + `server/` + `machine-learning/`)
 
 ## 📋 Estado de avance
 
-- **Fecha:** 2026-09-24
+- **Fecha:** 2026-09-25
 - **Base:** `a555ee9` (descarga del monorepo immich v3.2.0 sin historial)
 
-### Commits en `main` (6, sin mezclar tareas)
+---
+
+## 🎧 Auditoría de Cátedra — Etapa 1 (Backend) ✅ COMPLETADA
+
+**Spec:** `docs/superpowers/specs/2026-09-24-audios-de-catedra.md` *(si no existe, el plan es `docs/superpowers/plans/2026-09-24-audios-de-catedra.md`)*
+**Plan:** `docs/superpowers/plans/2026-09-24-audios-de-catedra.md`
+
+### Objetivo de la Etapa 1
+
+Diseñar un `POST /transcribe` en el microservicio de ML, transcribir audios de cátedra (voz es, supresión de silencio vía VAD), persistir la transcripción y exponerla con un endpoint de solo lectura REST seguro. **No tocar el buscador (`transcript_search`) ni el frontend.**
+
+### Commits en `main` (Etapa 1, 12 commits)
+
+| Commit | Descripción |
+| --- | --- |
+| `2736dff` | `feat(server): support audio assets` |
+| `63a34de` | `feat(server): add asset_transcript, transcript_search tables and transcribedAt column` |
+| `a9ce893` | `feat(server): add migrations for asset_transcript, transcript_search and transcribedAt` |
+| `f1de885` | `fix(server): resolve pre-existing unknown type error in workflow-execution` |
+| `9da9c21` | `fix(server): resolve lint errors in transcript schema tables` |
+| `d5b74e9` | `feat(server): add transcription methods to AssetJobRepository` |
+| `25910c9` | `feat(server): add transcription repository` |
+| `b4f4ff4` | `feat(server): add MachineLearningRepository.transcribe to call ML /transcribe` |
+| `31adb36` | `feat(server): add transcription queue/job and ML configuration` |
+| `8eefa3c` | `feat(server): add TranscriptionService with queue and healing job for audio` |
+| `5757b2e` | `feat(server): add GET /transcript/:assetId read endpoint` |
+
+### Qué se hizo (resumen técnico)
+
+1. **Soporte MIME de audio** en el modelado de activos (`2736dff`): los assets de audio se reconocen y se pueden encolar para transcripción.
+2. **Esquema de datos** (`63a34de`, `a9ce893`, `9da9c21`):
+   - Tabla `asset_transcript` (`assetId` PK + FK→`asset` ON DELETE CASCADE, `text`, `segments jsonb`, `language`, `model`, `createdAt`, `updatedAt`).
+   - Tabla `transcript_search` (`assetId` PK, FK→`asset_transcript`), con **índice GIN trigram** `gin (f_unaccent("text") gin_trgm_ops)` — reservada para una fase posterior de búsqueda. Se registra el índice en `migration_overrides`.
+   - Columna `transcribedAt` (timestamptz) en `asset_job_status` (marcador de progreso del job).
+3. **Pipeline de transcripción (BullMQ)** (`d5b74e9`, `25910c9`, `31adb36`, `8eefa3c`):
+   - `QueueName.Transcription` + `JobName.Transcription` (`handleTranscription`) y `JobName.TranscriptionQueueAll` (healing/queue de todos los pendientes con `force` → `deleteAll`).
+   - `AssetJobRepository.streamForTranscriptionJob` / `getForTranscription`; `TranscriptionRepository.upsert` / `getById` / `getByAssetId` (filtro `isVisible`) / `deleteAll`.
+   - `MachineLearningRepository.transcribe(audioPath, { modelName, language = 'es' })` → `POST /transcribe` con FormData (`audio`, `model`, `language`) y failover healthy-first sobre las URLs de ML. Default config: `transcription.modelName = 'small'`.
+   - `TranscriptionService` guarda en `asset_transcript` y marca `transcribedAt`; respeta `isTranscriptionEnabled(machineLearning)` y salta `AssetVisibility.Hidden`.
+4. **Endpoints** (`5757b2e`):
+   - `GET /transcript/:assetId` (`TranscriptionController`, `@Authenticated()`), DTO de solo lectura `TranscriptionResponseDto { id, text, segments, language, model, createdAt }`, con `requireAccess(Permission.AssetRead)` y `NotFoundException` si no hay transcripción.
+   - Contrato ML: `Transcription = { text, segments: TranscriptionSegment[], language, model }`, `TranscriptionSegment = { start, end, text }` (en `server/src/repositories/machine-learning.repository.ts` y `server/src/utils/database.ts`).
+
+### Verificación (Etapa 1)
+
+- Suite completa de server: baseline ambiental conocido (2233 passed / 1 expected fail / 77 fallidos preexistentes en 17 archivos ajenos) — **cero regresiones nuevas**.
+- Specs nuevos verdes en verde (controller/registro, service, repository).
+- `npm run check` y `npm run lint` limpios; `prettier --write` aplicado a los archivos touchados (CRLF).
+
+### Pendiente → Etapa 3 (siguiente)
+
+- **Implementar `POST /transcribe` en `machine-learning/`** (Python): FastAPI + `faster-whisper`, endpoint listo y probado (ver "Etapa 2 — ML `/transcribe`" arriba). La etapa 3 conecta el job de transcribir con la búsqueda/UI (fuera de alcance de la Etapa 2).
+- `faster-whisper` con RTX/GPU y `cuda` extra sigue pendiente de verificar en hardware con GPU (no aplica al contenedor CPU por defecto).
+- Job de transcripción en el worker: falta confirmar que `TranscriptionService`/`transcribe` del servidor ya se integra con el pipeline BullMQ `transcription` (verificado en Etapa 1).
+
+## 🗞️ Etapa 2 — ML Service Python `POST /transcribe`
+
+### Commits del diseño y código
+
+| Commit | Descripción |
+| --- | --- |
+| *(sin commitear aún)* | `feat(ml): add POST /transcribe endpoint (faster-whisper, cached WhisperModel)` |
+
+### Resumen del trabajo
+
+1. **Spec aprobada:** `docs/superpowers/specs/2026-09-25-python-transcription-design.md` — Opción A (módulo dedicado `immich_ml/transcribe.py`, independiente de `ModelTask`/`ModelCache`).
+2. **`immich_ml/transcribe.py`** (nuevo): caché global `dict` + `threading.Lock` de carga lazy de `WhisperModel` (`download_root=settings.cache_folder`); defaults `small`/`cpu`/`int8`/`es`/`vad_filter=True`; decodificación `io.BytesIO(audio)` vía PyAV (sin binario ffmpeg); segmentos `{ start, end, text }` (start/end redondeados a 3 decimales) y texto global `" ".join(...)` con `.strip()` por segmento (indexación trigram).
+3. **`immich_ml/config.py`:** 5 settings planos añadidos — `transcription_model`, `transcription_language`, `transcription_device`, `transcription_compute_type`, `transcription_vad_filter` (env `MACHINE_LEARNING_*`).
+4. **`immich_ml/main.py`:** endpoint `POST /transcribe` (`audio` requerido como `File(...)`, `model`/`language` opcionales), delegando a `run(transcribe_audio, ...)` (thread pool); `400` para audio vacío, `500` para fallos de inferencia.
+5. **`machine-learning/pyproject.toml` + `uv.lock`:** `faster-whisper>=1.1.0` en `dependencies` (lock: faster-whisper 1.2.1, ctranslate2 4.8.2, av 18.1.0).
+6. **Tests (`test_main.py`, TDD RED→GREEN):** 8 tests en `TestTranscribeEndpoint` (200/happy path, defaults, 400, 422, 500) y `TestTranscribe` (unión de segmentos, defaults desde settings + caché con `_transcription_models.clear()`, caché doble-modelo).
+
+### Verificación (Etapa 2)
+
+- `pytest -q` en contenedor Linux (`ml-test-runtime`): **110 passed, 3 skipped** (baseline sin regresiones).
+- `ruff check immich_ml test_main.py` → All checks passed; `ruff format --check` → 29 files ok.
+- `mypy --strict immich_ml/` → Success, 28 files.
+- **Advertencia ambiental:** `uv sync --frozen` no resuelve localmente (wheel de `watchfiles==0.21.0` no servido → build sdist requiere Rust). Vía validada: `uv pip install -e '.[cpu]' opencv-python==4.11.0.86 ...`. El pin de `opencv-python==4.11.0.86` es obligatorio (si no, se instala opencv-python 5.0.0.93 que sombrea a headless y rompe `cv2.typing`).
+
+---
+
+## 🖥️ Trabajo anterior (`web/`) — Timeline / Álbumes
+
+### Commits en `main` (web, 6 commits)
 
 | Commit | Descripción |
 | --- | --- |

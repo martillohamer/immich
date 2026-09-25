@@ -36,6 +36,7 @@ from .schemas import (
     PipelineRequest,
     T,
 )
+from .transcribe import transcribe_audio
 
 MultiPartParser.spool_max_size = 2**26  # spools to disk if payload is 64 MiB or larger
 
@@ -179,6 +180,22 @@ async def predict(
     else:
         raise HTTPException(400, "Either image or text must be provided")
     response = await run_inference(inputs, entries)
+    return ORJSONResponse(response)
+
+
+@app.post("/transcribe", dependencies=[Depends(update_state)])
+async def transcribe(
+    audio: bytes = File(...),
+    model: str | None = Form(default=None),
+    language: str | None = Form(default=None),
+) -> ORJSONResponse:
+    if not audio:
+        raise HTTPException(400, "Empty audio")
+    try:
+        response = await run(transcribe_audio, audio, model, language)
+    except Exception as e:
+        log.error(f"Failed to transcribe audio: {e}")
+        raise HTTPException(500, "Failed to transcribe audio") from e
     return ORJSONResponse(response)
 
 
