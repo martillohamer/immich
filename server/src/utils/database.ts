@@ -376,6 +376,8 @@ const isCJK = (c: number): boolean =>
   (c >= 0x30_a0 && c <= 0x30_ff) ||
   (c >= 0x34_00 && c <= 0x4d_bf);
 
+export type TranscriptionSegment = { start: number; end: number; text: string };
+
 export const tokenizeForSearch = (text: string): string[] => {
   /* eslint-disable unicorn/prefer-code-point */
   const tokens: string[] = [];

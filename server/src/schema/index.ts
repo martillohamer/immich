@@ -48,6 +48,7 @@ import { AssetMetadataAuditTable } from 'src/schema/tables/asset-metadata-audit.
 import { AssetMetadataTable } from 'src/schema/tables/asset-metadata.table.js';
 import { AssetOcrAuditTable } from 'src/schema/tables/asset-ocr-audit.table.js';
 import { AssetOcrTable } from 'src/schema/tables/asset-ocr.table.js';
+import { AssetTranscriptTable } from 'src/schema/tables/asset-transcript.table.js';
 import { AssetTable } from 'src/schema/tables/asset.table.js';
 import { ClusterGroupRequestTable } from 'src/schema/tables/cluster-group-request.table.js';
 import { ClusterGroupTable } from 'src/schema/tables/cluster-group.table.js';
@@ -63,6 +64,7 @@ import { MoveTable } from 'src/schema/tables/move.table.js';
 import { NaturalEarthCountriesTable } from 'src/schema/tables/natural-earth-countries.table.js';
 import { NotificationTable } from 'src/schema/tables/notification.table.js';
 import { OcrSearchTable } from 'src/schema/tables/ocr-search.table.js';
+import { TranscriptSearchTable } from 'src/schema/tables/transcript-search.table.js';
 import { PartnerAuditTable } from 'src/schema/tables/partner-audit.table.js';
 import { PartnerTable } from 'src/schema/tables/partner.table.js';
 import { PersonAuditTable } from 'src/schema/tables/person-audit.table.js';
@@ -118,6 +120,7 @@ export class ImmichDatabase {
     AssetJobStatusTable,
     AssetOcrTable,
     AssetOcrAuditTable,
+    AssetTranscriptTable,
     AssetTable,
     AssetFileTable,
     AssetExifTable,
@@ -135,6 +138,7 @@ export class ImmichDatabase {
     NaturalEarthCountriesTable,
     NotificationTable,
     OcrSearchTable,
+    TranscriptSearchTable,
     PartnerAuditTable,
     PartnerTable,
     PersonTable,
@@ -225,10 +229,12 @@ export interface DB {
   asset_job_status: AssetJobStatusTable;
   asset_ocr: AssetOcrTable;
   asset_ocr_audit: AssetOcrAuditTable;
+  asset_transcript: AssetTranscriptTable;
   asset_audio: AssetAudioTable;
   asset_video: AssetVideoTable;
   asset_keyframe: AssetKeyframeTable;
   ocr_search: OcrSearchTable;
+  transcript_search: TranscriptSearchTable;
 
   face_search: FaceSearchTable;
 
