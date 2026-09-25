@@ -1,5 +1,6 @@
 import { CurrentPlugin } from '@extism/extism';
 import {
+  type AssetV1,
   WorkflowChanges,
   WorkflowEventData,
   WorkflowEventPayload,
@@ -350,7 +351,7 @@ export class WorkflowExecutionService extends BaseService {
               };
             },
             write: async (auth, changes) => {
-              const asset = changes.asset;
+              const asset = (changes as Partial<AssetV1>).asset;
               if (!asset) {
                 return;
               }
