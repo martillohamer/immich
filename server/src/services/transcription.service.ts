@@ -1,8 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
+import type { AuthDto } from 'src/dtos/auth.dto.js';
 import type { JobOf } from 'src/types.js';
 import { OnJob } from 'src/decorators.js';
-import { AssetVisibility, JobName, JobStatus, QueueName } from 'src/enum.js';
+import { TranscriptionResponseDto } from 'src/dtos/transcription.dto.js';
+import { AssetVisibility, JobName, JobStatus, Permission, QueueName } from 'src/enum.js';
 import { BaseService } from 'src/services/base.service.js';
 import { batched, isTranscriptionEnabled } from 'src/utils/misc.js';
 
@@ -53,5 +55,22 @@ export class TranscriptionService extends BaseService {
 
     this.logger.debug(`Transcribed ${asset.originalFileName} for ${id}`);
     return JobStatus.Success;
+  }
+
+  async get(auth: AuthDto, assetId: string): Promise<TranscriptionResponseDto> {
+    await this.requireAccess({ auth, permission: Permission.AssetRead, ids: [assetId] });
+
+    const transcript = await this.transcriptionRepository.getById(assetId);
+    if (!transcript) {
+      throw new NotFoundException('Transcript not found');
+    }
+
+    return {
+      text: transcript.text,
+      segments: transcript.segments,
+      language: transcript.language,
+      model: transcript.model,
+      createdAt: transcript.createdAt,
+    };
   }
 }

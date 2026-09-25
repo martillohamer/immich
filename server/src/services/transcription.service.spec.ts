@@ -1,7 +1,9 @@
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { AssetVisibility, JobName, JobStatus } from 'src/enum.js';
 import { TranscriptionService } from 'src/services/transcription.service.js';
 import { AssetFactory } from 'test/factories/asset.factory.js';
 import { systemConfigStub } from 'test/fixtures/system-config.stub.js';
+import { factory } from 'test/small.factory.js';
 import { ServiceMocks, makeStream, newTestService } from 'test/utils.js';
 
 describe(TranscriptionService.name, () => {
@@ -149,6 +151,46 @@ describe(TranscriptionService.name, () => {
       await expect(sut.handleTranscription({ id: 'asset-123' })).rejects.toThrow(
         'Asset asset-123 is not a transcribable asset',
       );
+    });
+  });
+
+  describe('get', () => {
+    const auth = factory.auth();
+    const assetId = factory.uuid();
+
+    it('should throw a BadRequestException when the user cannot access the asset', async () => {
+      await expect(sut.get(auth, assetId)).rejects.toBeInstanceOf(BadRequestException);
+      expect(mocks.transcription.getById).not.toHaveBeenCalled();
+    });
+
+    it('should throw a NotFoundException when the asset has no transcript', async () => {
+      mocks.access.asset.checkOwnerAccess.mockResolvedValue(new Set([assetId]));
+      mocks.transcription.getById.mockResolvedValue(undefined);
+
+      await expect(sut.get(auth, assetId)).rejects.toBeInstanceOf(NotFoundException);
+      expect(mocks.access.asset.checkOwnerAccess).toHaveBeenCalledWith(auth.user.id, new Set([assetId]), undefined);
+    });
+
+    it('should return the transcript with access', async () => {
+      const createdAt = new Date('2025-01-01T00:00:00.000Z');
+      mocks.access.asset.checkOwnerAccess.mockResolvedValue(new Set([assetId]));
+      mocks.transcription.getById.mockResolvedValue({
+        assetId,
+        text: 'Hola mundo',
+        segments: [{ start: 0, end: 1, text: 'Hola' }],
+        language: 'es',
+        model: 'small',
+        createdAt,
+        updatedAt: createdAt,
+      });
+
+      await expect(sut.get(auth, assetId)).resolves.toEqual({
+        text: 'Hola mundo',
+        segments: [{ start: 0, end: 1, text: 'Hola' }],
+        language: 'es',
+        model: 'small',
+        createdAt,
+      });
     });
   });
 });

@@ -38,6 +38,7 @@ import { SystemConfigController } from 'src/controllers/system-config.controller
 import { SystemMetadataController } from 'src/controllers/system-metadata.controller.js';
 import { TagController } from 'src/controllers/tag.controller.js';
 import { TimelineController } from 'src/controllers/timeline.controller.js';
+import { TranscriptionController } from 'src/controllers/transcription.controller.js';
 import { TrashController } from 'src/controllers/trash.controller.js';
 import { UserAdminController } from 'src/controllers/user-admin.controller.js';
 import { UserController } from 'src/controllers/user.controller.js';
@@ -86,6 +87,7 @@ export const controllers = [
   SystemMetadataController,
   TagController,
   TimelineController,
+  TranscriptionController,
   TrashController,
   UserAdminController,
   UserController,
