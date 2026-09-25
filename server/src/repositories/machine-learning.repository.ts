@@ -3,6 +3,7 @@ import { Duration } from 'luxon';
 import { readFile } from 'node:fs/promises';
 import { MachineLearningConfig } from 'src/dtos/config.dto.js';
 import { LoggingRepository } from 'src/repositories/logging.repository.js';
+import { type TranscriptionSegment } from 'src/utils/database.js';
 
 export interface BoundingBox {
   x1: number;
@@ -74,6 +75,9 @@ export interface Face {
 export type FacialRecognitionResponse = { [ModelTask.FACIAL_RECOGNITION]: Face[] } & VisualResponse;
 export type MachineLearningRequest = ClipVisualRequest | ClipTextualRequest | FacialRecognitionRequest | OcrRequest;
 export type TextEncodingOptions = ModelOptions & { language?: string };
+export type Transcription = { text: string; segments: TranscriptionSegment[]; language: string; model: string };
+export type TranscriptionOptions = ModelOptions & { language?: string };
+export type { TranscriptionSegment } from 'src/utils/database.js';
 
 @Injectable()
 export class MachineLearningRepository {
@@ -223,6 +227,39 @@ export class MachineLearningRepository {
     };
     const response = await this.predict<OcrResponse>({ imagePath }, request);
     return response[ModelTask.OCR];
+  }
+
+  async transcribe(audioPath: string, { modelName, language = 'es' }: TranscriptionOptions): Promise<Transcription> {
+    const fileBuffer = await readFile(audioPath);
+    const formData = new FormData();
+    formData.append('audio', new Blob([new Uint8Array(fileBuffer)]));
+    formData.append('model', modelName);
+    formData.append('language', language);
+
+    for (const url of [
+      // try healthy servers first
+      ...this.config.urls.filter((url) => this.isHealthy(url)),
+      ...this.config.urls.filter((url) => !this.isHealthy(url)),
+    ]) {
+      try {
+        const response = await fetch(new URL('transcribe', url), { method: 'POST', body: formData });
+        if (response.ok) {
+          this.setHealthy(url, true);
+          const data = (await response.json()) as Transcription;
+          return { ...data, segments: data.segments ?? [] };
+        }
+
+        this.logger.warn(
+          `Machine learning transcribe request to "${url}" failed with status ${response.status}: ${response.statusText}`,
+        );
+      } catch (error: Error | unknown) {
+        this.logger.warn(`Machine learning transcribe request to "${url}" failed`, error);
+      }
+
+      this.setHealthy(url, false);
+    }
+
+    throw new Error(`Machine learning request to transcribe failed for all URLs`);
   }
 
   private async getFormData(payload: ModelPayload, config: MachineLearningRequest): Promise<FormData> {
