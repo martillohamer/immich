@@ -1,7 +1,7 @@
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { render, fireEvent } from '@testing-library/svelte';
-import TranscriptPanel from './TranscriptPanel.svelte';
 import type { TranscriptionResponseDto } from '@immich/sdk';
+import { render, fireEvent } from '@testing-library/svelte';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import TranscriptPanel from './TranscriptPanel.svelte';
 
 type ManagerState = {
   status: 'loading' | 'empty' | 'error' | 'success';
