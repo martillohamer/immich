@@ -1,4 +1,4 @@
-import { getAssetInfo, getAssetOcr, getFaces } from '@immich/sdk';
+import { getAssetInfo, getAssetOcr, getAssetTranscript, getFaces } from '@immich/sdk';
 import { authManager } from '$lib/managers/auth-manager.svelte';
 import { eventManager } from '$lib/managers/event-manager.svelte';
 
@@ -39,6 +39,7 @@ class AssetCacheManager {
   #assetCache = new AsyncCache(getAssetInfo);
   #ocrCache = new AsyncCache(getAssetOcr);
   #faceCache = new AsyncCache(getFaces);
+  #transcriptCache = new AsyncCache(getAssetTranscript);
 
   constructor() {
     eventManager.on({
@@ -63,11 +64,16 @@ class AssetCacheManager {
     return this.#faceCache.getOrFetch({ id }, true);
   }
 
+  async getAssetTranscript(id: string) {
+    return this.#transcriptCache.getOrFetch({ id }, true);
+  }
+
   invalidateAsset(id: string) {
     const { key, slug } = authManager.params;
     this.#assetCache.clearKey({ id, key, slug });
     this.#ocrCache.clearKey({ id });
     this.#faceCache.clearKey({ id });
+    this.#transcriptCache.clearKey({ id });
   }
 
   clearAssetCache() {
@@ -82,10 +88,15 @@ class AssetCacheManager {
     this.#faceCache.clear();
   }
 
+  clearTranscriptCache() {
+    this.#transcriptCache.clear();
+  }
+
   invalidate() {
     this.clearAssetCache();
     this.clearOcrCache();
     this.clearFaceCache();
+    this.clearTranscriptCache();
   }
 }
 
