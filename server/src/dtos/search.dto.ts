@@ -266,6 +266,7 @@ const searchFilterBranchShape = {
   originalFileName: StringPatternFilterSchema,
   originalPath: StringPatternFilterSchema,
   ocr: StringSimilarityFilterSchema,
+  transcript: StringSimilarityFilterSchema,
   rating: NumberFilterNullableSchema,
   fileSizeInBytes: NumberFilterSchema,
   takenAt: DateFilterSchema,

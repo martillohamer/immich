@@ -293,6 +293,20 @@ describe(SearchService.name, () => {
       ).resolves.toBeDefined();
       expect(mocks.search.searchMetadataV3).toHaveBeenCalled();
     });
+
+    it('should route transcript filter to V3 search', async () => {
+      const auth = AuthFactory.create();
+      mocks.search.searchMetadataV3.mockResolvedValue({ hasNextPage: false, items: [] });
+
+      await sut.searchMetadata(auth, { size: 250, filter: { transcript: { matches: 'test' } } });
+
+      const calls = mocks.search.searchMetadataV3.mock.calls;
+      expect(calls.length).toBe(1);
+      const [pagination, options, scope] = calls[0];
+      expect(pagination).toEqual({ take: 250, skip: 0 });
+      expect(options.filter).toBeDefined();
+      expect(options.filter!.transcript).toEqual({ matches: 'test' });
+    });
   });
 
   describe('searchSmart', () => {
