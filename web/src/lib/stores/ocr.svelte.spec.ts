@@ -8,6 +8,7 @@ vi.mock('@immich/sdk', () => ({
   getAssetInfo: vi.fn(),
   getAssetOcr: vi.fn(),
   getFaces: vi.fn(),
+  getAssetTranscript: vi.fn(),
 }));
 
 const createMockOcrData = (overrides?: Partial<OcrBoundingBox>): OcrBoundingBox[] => [
