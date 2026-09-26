@@ -1413,6 +1413,26 @@ export type AssetOcrResponseDto = {
     /** Normalized y coordinate of box corner 4 (0-1) */
     y4: number;
 };
+export type TranscriptionResponseSegmentDto = {
+    /** End time of the segment in seconds */
+    end: number;
+    /** Start time of the segment in seconds */
+    start: number;
+    /** The segment text */
+    text: string;
+};
+export type TranscriptionResponseDto = {
+    /** The date the transcript was created */
+    createdAt: Date;
+    /** The detected language code */
+    language: string;
+    /** The model used for transcription */
+    model: string | null;
+    /** The transcript segments */
+    segments: TranscriptionResponseSegmentDto[];
+    /** The full transcript text */
+    text: string;
+};
 export type SignUpDto = {
     /** User email */
     email: string;
@@ -4890,6 +4910,19 @@ export function getAssetOcr({ id }: {
         status: 200;
         data: AssetOcrResponseDto[];
     }>(`/assets/${encodeURIComponent(id)}/ocr`, {
+        ...opts
+    }));
+}
+/**
+ * Retrieve an asset transcript
+ */
+export function getAssetTranscript({ id }: {
+    id: string;
+}, opts?: Oazapfts.RequestOpts) {
+    return oazapfts.ok(oazapfts.fetchJson<{
+        status: 200;
+        data: TranscriptionResponseDto;
+    }>(`/transcript/${encodeURIComponent(id)}`, {
         ...opts
     }));
 }
