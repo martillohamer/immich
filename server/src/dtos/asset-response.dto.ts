@@ -113,6 +113,7 @@ export const AssetResponseSchema = SanitizedAssetResponseSchema.extend(
       .boolean()
       .describe('Is edited')
       .meta(new HistoryBuilder().added('v2.5.0').beta('v2.5.0').getExtensions()),
+    transcriptSnippet: z.string().optional().describe('Transcript snippet for audio assets matching search query'),
   }).shape,
 ).meta({ id: 'AssetResponseDto' });
 
@@ -154,6 +155,7 @@ export type MapAsset = {
   width: number | null;
   height: number | null;
   isEdited: boolean;
+  transcriptSnippet?: string;
 };
 
 export type AssetMapOptions = {
@@ -242,5 +244,6 @@ export function mapAsset(entity: MaybeDehydrated<MapAsset>, options: AssetMapOpt
     width: entity.width,
     height: entity.height,
     isEdited: entity.isEdited,
+    transcriptSnippet: entity.transcriptSnippet,
   };
 }

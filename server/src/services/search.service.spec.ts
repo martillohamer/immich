@@ -2,7 +2,7 @@ import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { beforeEach, vitest } from 'vitest';
 import { mapAsset } from 'src/dtos/asset-response.dto.js';
 import { SearchSuggestionType } from 'src/dtos/search.dto.js';
-import { AssetVisibility } from 'src/enum.js';
+import { AssetType, AssetVisibility } from 'src/enum.js';
 import { SearchService } from 'src/services/search.service.js';
 import { AssetFactory } from 'test/factories/asset.factory.js';
 import { AuthFactory } from 'test/factories/auth.factory.js';
@@ -306,6 +306,60 @@ describe(SearchService.name, () => {
       expect(pagination).toEqual({ take: 250, skip: 0 });
       expect(options.filter).toBeDefined();
       expect(options.filter!.transcript).toEqual({ matches: 'test' });
+    });
+
+    it('should populate transcriptSnippet for audio assets when transcript filter matches', async () => {
+      const auth = AuthFactory.create();
+      const audioAsset = AssetFactory.from({ type: AssetType.Audio }).build();
+      const imageAsset = AssetFactory.from({ type: AssetType.Image }).build();
+
+      mocks.search.searchMetadataV3.mockResolvedValue({
+        hasNextPage: false,
+        items: [getForAsset(audioAsset), getForAsset(imageAsset)] as never,
+      });
+      mocks.transcription.findMatchingSnippets.mockResolvedValue(new Map([[audioAsset.id, 'snippet text']]));
+
+      const result = await sut.searchMetadata(auth, { size: 250, filter: { transcript: { matches: 'hello' } } });
+
+      expect(mocks.transcription.findMatchingSnippets).toHaveBeenCalledWith([audioAsset.id], 'hello');
+      expect(result.assets.items).toHaveLength(2);
+      const audioResult = result.assets.items.find((item) => item.id === audioAsset.id);
+      const imageResult = result.assets.items.find((item) => item.id === imageAsset.id);
+      expect(audioResult!.transcriptSnippet).toBe('snippet text');
+      expect(imageResult!.transcriptSnippet).toBeUndefined();
+    });
+
+    it('should populate transcriptSnippet for audio assets when transcript filter in or branch matches', async () => {
+      const auth = AuthFactory.create();
+      const audioAsset = AssetFactory.from({ type: AssetType.Audio }).build();
+
+      mocks.search.searchMetadataV3.mockResolvedValue({
+        hasNextPage: false,
+        items: [getForAsset(audioAsset)] as never,
+      });
+      mocks.transcription.findMatchingSnippets.mockResolvedValue(new Map([[audioAsset.id, 'or branch snippet']]));
+
+      const result = await sut.searchMetadata(auth, {
+        size: 250,
+        filter: { or: [{ transcript: { matches: 'branch match' } }] },
+      });
+
+      expect(mocks.transcription.findMatchingSnippets).toHaveBeenCalledWith([audioAsset.id], 'branch match');
+      expect(result.assets.items[0].transcriptSnippet).toBe('or branch snippet');
+    });
+
+    it('should not call findMatchingSnippets when no transcript filter is present', async () => {
+      const auth = AuthFactory.create();
+      const audioAsset = AssetFactory.from({ type: AssetType.Audio }).build();
+
+      mocks.search.searchMetadataV3.mockResolvedValue({
+        hasNextPage: false,
+        items: [getForAsset(audioAsset)] as never,
+      });
+
+      await sut.searchMetadata(auth, { size: 250, filter: { city: { eq: 'Oslo' } } });
+
+      expect(mocks.transcription.findMatchingSnippets).not.toHaveBeenCalled();
     });
   });
 

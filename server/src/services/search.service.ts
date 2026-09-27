@@ -22,7 +22,7 @@ import {
   isNewShapeRequest,
   mapPlaces,
 } from 'src/dtos/search.dto.js';
-import { AssetOrder, AssetVisibility, Permission } from 'src/enum.js';
+import { AssetOrder, AssetType, AssetVisibility, Permission } from 'src/enum.js';
 import { AssetSearchScope } from 'src/repositories/search.repository.js';
 import { BaseService } from 'src/services/base.service.js';
 import { requireElevatedPermission } from 'src/utils/access.js';
@@ -255,7 +255,28 @@ export class SearchService extends BaseService {
       scope,
     );
 
-    return this.mapResponse(items, { auth }, { nextCursor: hasNextPage ? encodeSearchCursor(offset + size) : null });
+    // Post-process transcript snippets for audio assets
+    const transcriptFilter = filter.transcript;
+    const hasTranscriptFilter = transcriptFilter || filter.or?.some((b) => b.transcript);
+    if (hasTranscriptFilter && items.length > 0) {
+      const audioAssetIds = items
+        .filter((item) => item.type === AssetType.Audio)
+        .map((item) => item.id);
+      if (audioAssetIds.length > 0) {
+        const matches = transcriptFilter?.matches
+          ? [transcriptFilter.matches]
+          : filter.or?.map((b) => b.transcript?.matches).filter(Boolean) ?? [];
+        const query = matches.join(' ');
+        if (query) {
+          const snippets = await this.transcriptionRepository.findMatchingSnippets(audioAssetIds, query);
+          for (const item of items) {
+            (item as MapAsset).transcriptSnippet = snippets.get(item.id);
+          }
+        }
+      }
+    }
+
+    return this.mapResponse(items as MapAsset[], { auth }, { nextCursor: hasNextPage ? encodeSearchCursor(offset + size) : null });
   }
 
   private async searchStatisticsV3(auth: AuthDto, dto: StatisticsSearchDto): Promise<SearchStatisticsResponseDto> {
