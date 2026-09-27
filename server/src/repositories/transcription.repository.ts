@@ -83,4 +83,15 @@ export class TranscriptionRepository {
       await sql`truncate ${sql.table('transcript_search')}, ${sql.table('asset_transcript')}`.execute(trx);
     });
   }
+
+  async findMatchingSnippets(assetIds: string[], query: string): Promise<Map<string, string>> {
+    const results = await this.db
+      .selectFrom('transcript_search')
+      .select(['assetId', 'text'])
+      .where('assetId', 'in', assetIds)
+      .where(() => sql`f_unaccent(text) %>> f_unaccent(${tokenizeForSearch(query).join(' ')})`)
+      .execute();
+
+    return new Map(results.map((r) => [r.assetId, r.text]));
+  }
 }
