@@ -110,7 +110,18 @@ export class SearchService extends BaseService {
       },
     );
 
-    return this.mapResponse(items, { auth }, { nextPage: hasNextPage ? (page + 1).toString() : null });
+    // Post-process transcript snippets for audio assets on the deprecated flat path
+    if (dto.transcript && items.length > 0) {
+      const audioAssetIds = items.filter((item) => item.type === AssetType.Audio).map((item) => item.id);
+      if (audioAssetIds.length > 0) {
+        const snippets = await this.transcriptionRepository.findMatchingSnippets(audioAssetIds, dto.transcript);
+        for (const item of items) {
+          (item as MapAsset).transcriptSnippet = snippets.get(item.id);
+        }
+      }
+    }
+
+    return this.mapResponse(items as MapAsset[], { auth }, { nextPage: hasNextPage ? (page + 1).toString() : null });
   }
 
   async searchStatistics(auth: AuthDto, dto: StatisticsSearchDto): Promise<SearchStatisticsResponseDto> {

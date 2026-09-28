@@ -363,6 +363,62 @@ describe(SearchService.name, () => {
     });
   });
 
+  describe('flat search transcript support', () => {
+    it('should route a flat transcript request to the legacy search and populate transcriptSnippet', async () => {
+      const auth = AuthFactory.create();
+      const audioAsset = AssetFactory.from({ type: AssetType.Audio }).build();
+      const imageAsset = AssetFactory.from({ type: AssetType.Image }).build();
+
+      mocks.search.searchMetadata.mockResolvedValue({
+        hasNextPage: false,
+        items: [getForAsset(audioAsset), getForAsset(imageAsset)] as never,
+      });
+      mocks.transcription.findMatchingSnippets.mockResolvedValue(new Map([[audioAsset.id, 'flat snippet text']]));
+
+      const result = await sut.searchMetadata(auth, { size: 250, transcript: 'some text' });
+
+      expect(mocks.search.searchMetadataV3).not.toHaveBeenCalled();
+      expect(mocks.search.searchMetadata).toHaveBeenCalledWith(
+        { page: 1, size: 250 },
+        expect.objectContaining({ transcript: 'some text' }),
+      );
+      expect(mocks.transcription.findMatchingSnippets).toHaveBeenCalledWith([audioAsset.id], 'some text');
+
+      const audioResult = result.assets.items.find((item) => item.id === audioAsset.id);
+      const imageResult = result.assets.items.find((item) => item.id === imageAsset.id);
+      expect(audioResult!.transcriptSnippet).toBe('flat snippet text');
+      expect(imageResult!.transcriptSnippet).toBeUndefined();
+    });
+
+    it('should not call findMatchingSnippets when a flat request has no transcript filter', async () => {
+      const auth = AuthFactory.create();
+      const audioAsset = AssetFactory.from({ type: AssetType.Audio }).build();
+
+      mocks.search.searchMetadata.mockResolvedValue({
+        hasNextPage: false,
+        items: [getForAsset(audioAsset)] as never,
+      });
+
+      await sut.searchMetadata(auth, { size: 250, city: 'Oslo' });
+
+      expect(mocks.transcription.findMatchingSnippets).not.toHaveBeenCalled();
+    });
+
+    it('should not call findMatchingSnippets when a flat transcript request returns no audio assets', async () => {
+      const auth = AuthFactory.create();
+      const imageAsset = AssetFactory.from({ type: AssetType.Image }).build();
+
+      mocks.search.searchMetadata.mockResolvedValue({
+        hasNextPage: false,
+        items: [getForAsset(imageAsset)] as never,
+      });
+
+      await sut.searchMetadata(auth, { size: 250, transcript: 'some text' });
+
+      expect(mocks.transcription.findMatchingSnippets).not.toHaveBeenCalled();
+    });
+  });
+
   describe('searchSmart', () => {
     beforeEach(() => {
       mocks.search.searchSmart.mockResolvedValue({ hasNextPage: false, items: [] });
