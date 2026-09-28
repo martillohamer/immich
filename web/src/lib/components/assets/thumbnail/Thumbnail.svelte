@@ -20,6 +20,7 @@
     mdiMotionPauseOutline,
     mdiMotionPlayOutline,
     mdiRotate360,
+    mdiSpeaker,
   } from '@mdi/js';
   import { onMount } from 'svelte';
   import type { ClassValue } from 'svelte/elements';
@@ -291,6 +292,14 @@
         </div>
       {/if}
 
+      {#if asset.isAudio && mouseOver}
+        <div class="pointer-events-none absolute size-full">
+          <div class="flex size-full place-items-center justify-center bg-black/40">
+            <Icon icon={mdiSpeaker} size="32" class="text-white" />
+          </div>
+        </div>
+      {/if}
+
       {#if (!loaded || thumbError) && asset.thumbhash}
         <Thumbhash
           base64ThumbHash={asset.thumbhash}
@@ -351,6 +360,12 @@
             <span class="pe-2 pt-2">
               <Icon icon={mouseOver ? mdiMotionPauseOutline : mdiFileGifBox} size="24" />
             </span>
+          </div>
+        {/if}
+
+        {#if asset.isAudio}
+          <div class="absolute inset-s-2 z-2">
+            <Icon icon={mdiSpeaker} size="20" class="text-white" />
           </div>
         {/if}
 

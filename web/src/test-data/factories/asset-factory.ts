@@ -45,6 +45,7 @@ export const timelineAssetFactory = Sync.makeFactory<TimelineAsset>({
   isTrashed: false,
   isImage: true,
   isVideo: false,
+  isAudio: false,
   duration: null,
   stack: null,
   projectionType: null,

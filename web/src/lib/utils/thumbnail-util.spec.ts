@@ -100,6 +100,7 @@ describe('getAltText', () => {
         isTrashed: false,
         isVideo,
         isImage: !isVideo,
+        isAudio: false,
         stack: null,
         duration: null,
         projectionType: null,
