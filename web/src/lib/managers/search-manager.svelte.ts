@@ -7,6 +7,16 @@ import { Route } from '$lib/route';
 import type { SearchFilter } from '$lib/types';
 import { asLocalTimeISO, parseUtcDate } from '$lib/utils/date-time';
 
+interface ExtendedMetadataSearchDto extends MetadataSearchDto {
+  transcript?: string;
+}
+
+interface ExtendedSmartSearchDto extends SmartSearchDto {
+  transcript?: string;
+}
+
+type ExtendedSearchDto = ExtendedMetadataSearchDto | ExtendedSmartSearchDto;
+
 class SearchManager {
   #filter = $state<SearchFilter>(this.#fromQuery({}));
 
@@ -19,14 +29,14 @@ class SearchManager {
   }
 
   setQuery(query: MetadataSearchDto | SmartSearchDto) {
-    this.#filter = this.#fromQuery(query);
+    this.#filter = this.#fromQuery(query as ExtendedSearchDto);
   }
 
   async submit() {
     await goto(Route.search(this.#toQuery()));
   }
 
-  #fromQuery(searchQuery: MetadataSearchDto | SmartSearchDto): SearchFilter {
+  #fromQuery(searchQuery: ExtendedSearchDto): SearchFilter {
     let query = 'query' in searchQuery && searchQuery.query ? searchQuery.query : '';
     let queryType = query ? QueryType.SMART : this.#defaultQueryType();
 
@@ -50,9 +60,15 @@ class SearchManager {
       queryType = QueryType.OCR;
     }
 
+    if (searchQuery.transcript) {
+      query = searchQuery.transcript;
+      queryType = QueryType.TRANSCRIPT;
+    }
+
     return {
       query,
       ocr: searchQuery.ocr,
+      transcript: searchQuery.transcript ? { matches: searchQuery.transcript } : undefined,
       queryType,
       queryAssetId: 'queryAssetId' in searchQuery ? searchQuery.queryAssetId : undefined,
       personIds: new SvelteSet('personIds' in searchQuery ? searchQuery.personIds : []),
@@ -91,7 +107,7 @@ class SearchManager {
     };
   }
 
-  #toQuery(): MetadataSearchDto | SmartSearchDto {
+  #toQuery(): ExtendedSearchDto {
     let type: AssetTypeEnum | undefined = undefined;
     if (this.filter.mediaType === MediaType.Image) {
       type = AssetTypeEnum.Image;
@@ -105,6 +121,7 @@ class SearchManager {
       query: this.filter.queryType === 'smart' ? query : undefined,
       queryAssetId: this.filter.queryAssetId || undefined,
       ocr: this.filter.queryType === 'ocr' ? query : undefined,
+      transcript: this.filter.queryType === 'transcript' ? this.filter.transcript?.matches : undefined,
       originalFileName: this.filter.queryType === 'metadata' ? query : undefined,
       description: this.filter.queryType === 'description' ? query : undefined,
       originalPath: this.filter.queryType === 'fullPath' ? this.filter.query.trim() || undefined : undefined,
