@@ -26,7 +26,6 @@ describe('TranscriptionRepository', () => {
       execute: vi.fn().mockResolvedValue([]),
     };
 
-    // @ts-expect-error - mocking private db for testing
     repo = new TranscriptionRepository(mockDb as unknown as Kysely<unknown>);
   });
 
