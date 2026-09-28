@@ -68,7 +68,7 @@ class SearchManager {
     return {
       query,
       ocr: searchQuery.ocr,
-      transcript: searchQuery.transcript ? { matches: searchQuery.transcript } : undefined,
+      transcript: searchQuery.transcript,
       queryType,
       queryAssetId: 'queryAssetId' in searchQuery ? searchQuery.queryAssetId : undefined,
       personIds: new SvelteSet('personIds' in searchQuery ? searchQuery.personIds : []),
@@ -121,7 +121,7 @@ class SearchManager {
       query: this.filter.queryType === 'smart' ? query : undefined,
       queryAssetId: this.filter.queryAssetId || undefined,
       ocr: this.filter.queryType === 'ocr' ? query : undefined,
-      transcript: this.filter.queryType === 'transcript' ? this.filter.transcript?.matches : undefined,
+      transcript: this.filter.queryType === 'transcript' ? query : undefined,
       originalFileName: this.filter.queryType === 'metadata' ? query : undefined,
       description: this.filter.queryType === 'description' ? query : undefined,
       originalPath: this.filter.queryType === 'fullPath' ? this.filter.query.trim() || undefined : undefined,
