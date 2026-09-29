@@ -86,6 +86,36 @@ Diseñar un `POST /transcribe` en el microservicio de ML, transcribir audios de 
 
 ---
 
+## 🔍 Etapa 4: Búsqueda Global de Transcripciones y Indexación Cruzada (Completada - Septiembre 2026)
+
+Se ha integrado con éxito el sistema de transcripciones de audio en el **Buscador Global de Immich**, permitiendo buscar conceptos dentro de los audios de clase mediante índices GIN trigram.
+
+### Hitos Técnicos Implementados:
+1. **Capa de Base de Datos y Consultas (Backend NestJS):**
+   - Extensión de `SearchFilterBranch` y `SearchFilter` para admitir el parámetro `transcript`.
+   - Incorporación de predicados de búsqueda y unión heredada (`branchPredicates` y `searchAssetBuilderLegacy`) utilizando `%>>` con GIN trigram sobre la tabla `transcript_search`, replicando el patrón robusto de OCR.
+2. **Servicio de Coincidencias y Snippets:**
+   - Creación del método `findMatchingSnippets` para extraer los fragmentos exactos donde se menciona el término buscado.
+   - Post-procesamiento en lote (`batch SELECT`) dentro de `searchMetadataV3` para inyectar el campo `transcriptSnippet` en los DTOs de resultados para assets de tipo `AUDIO`.
+3. **Interfaz de Usuario y Timeline (Frontend SvelteKit):**
+   - Actualización de `SearchManager` y esquemas de búsqueda para soportar el nuevo filtro.
+   - Extensión de `TimelineAsset` con `isAudio` y añadido de un distintivo visual (`🔊` / icono de altavoz) con overlay de reproducción en las miniaturas de audio (`Thumbnail.svelte`).
+   - Conexión nativa del flujo de navegación: un clic en un resultado de audio lo enruta directamente al `AudioViewer` con la transcripción sincronizada cargada en el `TranscriptPanel`.
+
+### Commits Clave (Fase de Búsqueda):
+- `283ff45`: Task 1 — Query builder transcript filter (`branchPredicates` + legacy innerJoin).
+- `e7b1003`: Task 2 — Implementación de `findMatchingSnippets` y especificaciones.
+- `c29b521`: Task 3 — Post-procesamiento de snippets en `searchMetadataV3` y DTO `transcriptSnippet`.
+- `0fbf6af`, `c9c1a59`, `8c3e1fc`: Task 4 — Mapeo en `SearchManager` y correcciones de revisión.
+- `bb48e26`: Task 5 — `TimelineAsset.isAudio` y distintivo de altavoz en miniaturas.
+*(Nota: Task 6 resuelta de forma nativa por el enrutamiento existente de assets de audio; Task 7 con suite de tests validada en verde).*
+
+### Próximas Mejoras Futuras Opcionales:
+- Añadir un botón o filtro dedicado de "Transcripción" en la barra de búsqueda avanzada (`SearchBar`).
+- Renderizar de forma explícita el extracto de texto (`transcriptSnippet`) directamente bajo la miniatura en la vista de resultados de búsqueda web.
+
+---
+
 ## 🖥️ Trabajo anterior (`web/`) — Timeline / Álbumes
 
 ### Commits en `main` (web, 6 commits)
