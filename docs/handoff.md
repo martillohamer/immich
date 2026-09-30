@@ -182,6 +182,23 @@ Replica el patrón del service de timeline para mostrar el total de álbumes por
 - `npm run check:svelte`: **0 errores, 62 warnings en 39 archivos, todos preexistentes** (`state_referenced_locally` en modals ajenos); ningún archivo de esta feature produce warnings.
 - Suite vitest completa: **13/13 tests nuevos verdes** (servicio 5, GroupTab 3, AlbumFilterTabs 5). Únicos fallos de la suite: **20 tests de `thumbnail-util.spec.ts`, preexistentes y ambientales** — `getAltText` formatea con `toLocaleString(get(locale))` donde `locale` es `null` en test, y `Intl` cae al locale del sistema (`es_ES` → "1 de enero de 2024") en vez de en-US ("January 1, 2024"). Ningún archivo de la feature participa en esa cadena.
 
+### Tarea: Smart Class Notes — Task 1 (resúmenes de transcripción, frontend)
+
+**Spec:** `docs/superpowers/specs/2026-09-30-smart-class-notes-task1-design.md`
+**Plan:** `docs/superpowers/plans/2026-09-30-smart-class-notes-task1-plan.md`
+**Estado:** implementada, verificada y **staged (sin commitear)**.
+
+1. **Tipos de dominio** (`web/src/lib/types/transcript.ts`, nuevo): `KeyConcept` y `SummaryData` (resumen ejecutivo, temas, conceptos clave, conclusión, título y fuente `assetId`).
+2. **Mock determinista de resumen** (`web/src/lib/utils/transcript-summary.ts` + `.spec.ts`, nuevos): `createMockSummary(assetId)` (4 temas y 3 conceptos en español, sin aleatoriedad). Spec `describe('createMockSummary')` con 5 tests (titulo/source, 4 temas, 3 conceptos, español, formato numérico de concepto).
+3. **Store ampliado** (`web/src/lib/stores/transcript.svelte.ts`): pestañas `activeTab<'transcript'|'summary'>` con `setActiveTab`; estado `summaryData`/`isGeneratingSummary`; `loadAssetSummary(assetId)` bajo `CancellableTask` con flag **dedicado `#summaryCleared`** (evita que el resumen consuma la ventana "cleared" del loader de transcripción y deje a `getAssetTranscript` corto-circuitando con `'DONE'`); `clear()` resetea también el estado de resumen. Spec ampliado a 11 tests (`describe('summary state')`).
+4. **Correcciones TDD detectadas en verde** (aplicadas también al plan): `#isGeneratingSummary = true` como primer statement síncrono del método (observable tras `clear()`); el test de refetch del transcript invalida `clearTranscriptCache()` del SDK (sin mock, la 2ª llamada se servía por caché); `eslint-disable` puntual de `require-await` en el callback del loader (el tipo `F extends ... Promise<void>` exige `async` en un mock síncrono).
+
+### Verificación (Task 1 Smart Class Notes)
+
+- **Vitest: 16/16 tests en verde** (`transcript.svelte.spec.ts` 11 + `transcript-summary.spec.ts` 5).
+- `check:typescript` exit 0; `lint` exit 0 (solo mensajes stderr del parser experimental); búsqueda estricta `\bany\b` = **0 matches**.
+- Sin commit ni push todavía (staging selectivo preparado). `docs/superpowers/` queda fuera de todo commit (untracked).
+
 ### Ruido de entorno excluido de commits (no tocar)
 
 - `mise.lock` (modificado).
