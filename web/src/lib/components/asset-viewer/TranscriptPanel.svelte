@@ -1,5 +1,7 @@
 <script lang="ts">
   import { transcriptManager } from '$lib/stores/transcript.svelte';
+  import GroupTab from '$lib/elements/GroupTab.svelte';
+  import SummaryPanel from './SummaryPanel.svelte';
   import { t } from 'svelte-i18n';
 
   let {
@@ -16,11 +18,20 @@
 
   let transcript = $derived(transcriptManager.transcript);
   let status = $derived(transcriptManager.status);
+  let activeTab = $derived(transcriptManager.activeTab);
+  let summaryData = $derived(transcriptManager.summaryData);
+  let isGeneratingSummary = $derived(transcriptManager.isGeneratingSummary);
   let userScrolling = false;
 
   $effect(() => {
     void transcriptManager.getAssetTranscript(assetId);
     return () => transcriptManager.clear();
+  });
+
+  $effect(() => {
+    if (activeTab === 'summary' && status === 'success' && transcript && summaryData === null && !isGeneratingSummary) {
+      void transcriptManager.loadAssetSummary(assetId);
+    }
   });
 
   let activeIndex = $derived(
@@ -52,7 +63,7 @@
   class="fixed inset-x-0 bottom-0 z-40 mt-2 max-h-[30vh] overflow-y-auto border-t border-immich-gray/30 bg-immich-bg/95 backdrop-blur-sm"
   bind:this={scrollContainer}
   role="region"
-  aria-label={$t('transcript_title')}
+  aria-label={activeTab === 'summary' ? $t('smart_class_summary_title') : $t('transcript_title')}
   onwheel={handleScrollStart}
   ontouchmove={handleScrollStart}
 >
@@ -64,12 +75,31 @@
       {/if}
     </div>
 
+    {#if status === 'success' && transcript}
+      <div class="flex justify-end">
+        <GroupTab
+          filters={['transcript', 'summary']}
+          labels={[$t('transcript_title'), $t('smart_class_summary_title')]}
+          selected={activeTab}
+          label={$t('smart_class_notes_viewer_tabs')}
+          loading={isGeneratingSummary}
+          onSelect={(tab) => transcriptManager.setActiveTab(tab as 'transcript' | 'summary')}
+        />
+      </div>
+    {/if}
+
     {#if status === 'loading'}
       <div data-testid="transcript-loading" class="text-sm text-immich-gray">{$t('transcript_loading')}</div>
     {:else if status === 'empty'}
       <div data-testid="transcript-empty" class="text-sm text-immich-gray">{$t('transcript_empty')}</div>
     {:else if status === 'error'}
       <div data-testid="transcript-error" class="text-sm text-red-600">{$t('transcript_error')}</div>
+    {:else if activeTab === 'summary'}
+      <SummaryPanel
+        summaryData={summaryData}
+        loading={isGeneratingSummary}
+        onRetry={() => void transcriptManager.loadAssetSummary(assetId)}
+      />
     {:else if transcript}
       <div class="flex flex-col gap-1">
         {#each transcript.segments as segment, index (index)}
