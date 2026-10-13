@@ -218,4 +218,22 @@ describe('TranscriptPanel', () => {
     expect(getByTestId('group-tab-spinner-1')).toBeInTheDocument();
     expect(getByTestId('summary-loading')).toBeInTheDocument();
   });
+
+  it('forwards assetName to the summary panel and exposes the export button', () => {
+    factory.manager = {
+      ...defaultManager,
+      status: 'success',
+      transcript,
+      activeTab: 'summary',
+      summaryData: mockSummary,
+    };
+    const { getByTestId } = render(TranscriptPanel, {
+      assetId: 'asset-1',
+      assetName: 'Clase 01',
+      currentTime: 0,
+      duration: 5,
+      onSeek: vi.fn(),
+    });
+    expect(getByTestId('summary-export')).toBeInTheDocument();
+  });
 });

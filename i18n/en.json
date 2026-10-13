@@ -2134,6 +2134,7 @@
   "success": "Success",
   "suggestions": "Suggestions",
   "summary_empty": "No summary is available for this asset yet.",
+  "summary_export": "Export as Markdown",
   "summary_generating": "Generating summary...",
   "summary_section_concepts": "Key concepts",
   "summary_section_executive": "Executive summary",

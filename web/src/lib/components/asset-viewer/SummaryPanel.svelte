@@ -3,15 +3,20 @@
   import { mdiLoading } from '@mdi/js';
   import { t } from 'svelte-i18n';
   import type { SummaryData } from '$lib/types/transcript';
+  import { downloadSummaryMarkdown, exportSummaryToMarkdown } from '$lib/utils/transcript-export';
 
   let {
     summaryData,
     loading,
     onRetry,
+    assetId,
+    assetName,
   }: {
     summaryData: SummaryData | null;
     loading: boolean;
     onRetry: () => void;
+    assetId: string;
+    assetName?: string;
   } = $props();
 
   const view = $derived(loading ? 'loading' : summaryData ? 'data' : 'empty');
@@ -30,6 +35,17 @@
     </button>
   </div>
 {:else}
+  <div class="flex justify-end">
+    <button
+      type="button"
+      data-testid="summary-export"
+      onclick={() => downloadSummaryMarkdown(exportSummaryToMarkdown(summaryData!, assetName), assetId)}
+      class="rounded-lg bg-immich-primary px-3 py-1.5 text-sm text-white hover:bg-immich-primary/80"
+    >
+      {$t('summary_export')}
+    </button>
+  </div>
+
   <section aria-labelledby="summary-executive-title" class="flex flex-col gap-1">
     <h3 id="summary-executive-title" class="text-sm font-semibold text-immich-primary">{$t('summary_section_executive')}</h3>
     <p data-testid="summary-executive" class="text-sm/relaxed text-immich-fg">{summaryData!.executiveSummary}</p>

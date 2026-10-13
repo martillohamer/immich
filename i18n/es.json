@@ -2111,6 +2111,7 @@
   "success": "Éxito",
   "suggestions": "Sugerencias",
   "summary_empty": "Aún no hay resumen disponible para este recurso.",
+  "summary_export": "Exportar como Markdown",
   "summary_generating": "Generando resumen...",
   "summary_section_concepts": "Conceptos clave",
   "summary_section_executive": "Resumen ejecutivo",

@@ -35,6 +35,8 @@
 
   const src = $derived(getAssetMediaUrl({ id: asset.id, size: AssetMediaSize.Original }));
 
+  const assetName = $derived(asset.originalFileName?.replace(/\.[^.]+$/, ''));
+
   const handleTimeUpdate = () => {
     currentTime = audio?.currentTime ?? 0;
   };
@@ -104,7 +106,7 @@
       </div>
     </media-controller>
   </div>
-  <TranscriptPanel {...{ assetId: asset.id, currentTime, duration, onSeek: seekTo }} />
+  <TranscriptPanel {...{ assetId: asset.id, assetName, currentTime, duration, onSeek: seekTo }} />
 </div>
 
 <style>

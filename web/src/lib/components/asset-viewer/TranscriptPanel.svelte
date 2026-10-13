@@ -6,11 +6,13 @@
 
   let {
     assetId,
+    assetName,
     currentTime,
     duration: _,
     onSeek,
   }: {
     assetId: string;
+    assetName?: string;
     currentTime: number;
     duration: number;
     onSeek: (time: number) => void;
@@ -99,6 +101,8 @@
         summaryData={summaryData}
         loading={isGeneratingSummary}
         onRetry={() => void transcriptManager.loadAssetSummary(assetId)}
+        {assetId}
+        {assetName}
       />
     {:else if transcript}
       <div class="flex flex-col gap-1">
