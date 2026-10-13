@@ -3,15 +3,17 @@ import { render, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { transcriptManager } from '$lib/stores/transcript.svelte';
+import type { SummaryData, FlashcardDeck } from '$lib/types/transcript';
 import TranscriptPanel from './TranscriptPanel.svelte';
-import type { SummaryData } from '$lib/types/transcript';
 
 type ManagerState = {
   status: 'loading' | 'empty' | 'error' | 'success';
   transcript: TranscriptionResponseDto | null;
-  activeTab: 'transcript' | 'summary';
+  activeTab: 'transcript' | 'summary' | 'flashcards';
   summaryData: SummaryData | null;
   isGeneratingSummary: boolean;
+  flashcardDeck: FlashcardDeck | null;
+  flashcardIndex: number;
 };
 
 const defaultManager: ManagerState = {
@@ -20,6 +22,8 @@ const defaultManager: ManagerState = {
   activeTab: 'transcript',
   summaryData: null,
   isGeneratingSummary: false,
+  flashcardDeck: null,
+  flashcardIndex: 0,
 };
 
 const factory: { manager: ManagerState } = { manager: { ...defaultManager } };
@@ -41,11 +45,18 @@ vi.mock(import('$lib/stores/transcript.svelte'), () => ({
     get isGeneratingSummary() {
       return factory.manager.isGeneratingSummary;
     },
+    get flashcardDeck() {
+      return factory.manager.flashcardDeck;
+    },
+    get flashcardIndex() {
+      return factory.manager.flashcardIndex;
+    },
     getAssetTranscript: vi.fn(),
-    setActiveTab: vi.fn((tab: 'transcript' | 'summary') => {
+    setActiveTab: vi.fn((tab: 'transcript' | 'summary' | 'flashcards') => {
       factory.manager.activeTab = tab;
     }),
     loadAssetSummary: vi.fn(),
+    ensureFlashcardsDeck: vi.fn(),
     clear: vi.fn(),
   } as never,
 }));
@@ -146,9 +157,10 @@ describe('TranscriptPanel', () => {
       onSeek: vi.fn(),
     });
     const radios = getAllByRole('radio') as HTMLInputElement[];
-    expect(radios).toHaveLength(2);
+    expect(radios).toHaveLength(3);
     expect(radios[0].checked).toBe(true);
     expect(radios[1].checked).toBe(false);
+    expect(radios[2].checked).toBe(false);
   });
 
   it('calls setActiveTab with summary when the summary tab is clicked', async () => {
@@ -235,5 +247,68 @@ describe('TranscriptPanel', () => {
       onSeek: vi.fn(),
     });
     expect(getByTestId('summary-export')).toBeInTheDocument();
+  });
+});
+
+describe('TranscriptPanel flashcards tab', () => {
+  const deck: FlashcardDeck = {
+    id: 'flashcards-test',
+    title: 'Clase 01',
+    cards: [{ id: 'concept-0', front: 'C', back: 'D', source: 'concept' }],
+  };
+
+  beforeEach(() => {
+    Element.prototype.scrollIntoView = vi.fn();
+    factory.manager = { ...defaultManager };
+  });
+
+  afterEach(() => {
+    factory.manager = { ...defaultManager };
+    vi.clearAllMocks();
+  });
+
+  it('renders three tabs and selects flashcards when clicked', async () => {
+    factory.manager = { ...defaultManager, status: 'success', transcript };
+    const { getAllByRole } = render(TranscriptPanel, {
+      assetId: 'asset-1',
+      currentTime: 0,
+      duration: 5,
+      onSeek: vi.fn(),
+    });
+    const radios = getAllByRole('radio') as HTMLInputElement[];
+    expect(radios).toHaveLength(3);
+    await fireEvent.change(radios[2]);
+    expect(vi.mocked(transcriptManager.setActiveTab)).toHaveBeenCalledWith('flashcards');
+  });
+
+  it('builds the deck when the flashcards tab is active', async () => {
+    factory.manager = {
+      ...defaultManager,
+      status: 'success',
+      transcript,
+      activeTab: 'flashcards',
+      summaryData: mockSummary,
+    };
+    render(TranscriptPanel, { assetId: 'asset-1', currentTime: 0, duration: 5, onSeek: vi.fn() });
+    await tick();
+    expect(vi.mocked(transcriptManager.ensureFlashcardsDeck)).toHaveBeenCalledWith(mockSummary, undefined);
+  });
+
+  it('renders the FlashcardPanel and sets the region aria-label when the flashcards tab is active', () => {
+    factory.manager = {
+      ...defaultManager,
+      status: 'success',
+      transcript,
+      activeTab: 'flashcards',
+      flashcardDeck: deck,
+    };
+    const { getByTestId, getByRole } = render(TranscriptPanel, {
+      assetId: 'asset-1',
+      currentTime: 0,
+      duration: 5,
+      onSeek: vi.fn(),
+    });
+    expect(getByTestId('flashcard-card')).toBeInTheDocument();
+    expect(getByRole('region')).toHaveAttribute('aria-label', 'smart_class_flashcards_title');
   });
 });

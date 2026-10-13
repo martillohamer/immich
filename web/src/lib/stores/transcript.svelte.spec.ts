@@ -3,6 +3,7 @@ import type { TranscriptionResponseDto } from '@immich/sdk';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { assetCacheManager } from '$lib/managers/AssetCacheManager.svelte';
 import { transcriptManager } from '$lib/stores/transcript.svelte';
+import type { SummaryData } from '$lib/types/transcript';
 
 // Mock the SDK
 vi.mock('@immich/sdk', () => ({
@@ -151,5 +152,90 @@ describe('summary state', () => {
     expect(transcriptManager.activeTab).toBe('transcript');
     expect(transcriptManager.summaryData).toBeNull();
     expect(transcriptManager.isGeneratingSummary).toBe(false);
+  });
+});
+
+describe('flashcard state', () => {
+  const summary: SummaryData = {
+    executiveSummary: 'E',
+    keyConcepts: [{ term: 'T1', definition: 'D1' }],
+    reviewQuestions: ['Q1'],
+  };
+
+  beforeEach(() => {
+    transcriptManager.clear();
+    assetCacheManager.clearTranscriptCache();
+    vi.clearAllMocks();
+  });
+
+  it('initializes with no deck, index 0, empty grades and the transcript tab', () => {
+    expect(transcriptManager.flashcardDeck).toBeNull();
+    expect(transcriptManager.flashcardIndex).toBe(0);
+    expect(transcriptManager.flashcardGrades).toEqual({});
+    expect(transcriptManager.activeTab).toBe('transcript');
+  });
+
+  it('accepts flashcards as a tab', () => {
+    transcriptManager.setActiveTab('flashcards');
+    expect(transcriptManager.activeTab).toBe('flashcards');
+  });
+
+  it('builds the deck once and reuses it for the same summary reference', () => {
+    const first = transcriptManager.ensureFlashcardsDeck(summary);
+    const second = transcriptManager.ensureFlashcardsDeck(summary);
+    expect(first).toBe(second);
+    expect(second.cards.map((card) => card.id)).toEqual(['concept-0', 'question-0']);
+  });
+
+  it('rebuilds the deck and resets the session when the summary reference changes', () => {
+    transcriptManager.ensureFlashcardsDeck(summary);
+    transcriptManager.gradeFlashcard('concept-0', 'known');
+    transcriptManager.setFlashcardIndex(1);
+
+    const other: SummaryData = { executiveSummary: 'X', keyConcepts: [], reviewQuestions: [] };
+    const rebuilt = transcriptManager.ensureFlashcardsDeck(other);
+
+    expect(rebuilt.cards).toEqual([]);
+    expect(transcriptManager.flashcardGrades).toEqual({});
+    expect(transcriptManager.flashcardIndex).toBe(0);
+  });
+
+  it('accumulates grades immutably', () => {
+    transcriptManager.ensureFlashcardsDeck(summary);
+    const before = transcriptManager.flashcardGrades;
+    transcriptManager.gradeFlashcard('concept-0', 'known');
+    expect(transcriptManager.flashcardGrades).not.toBe(before);
+    expect(transcriptManager.flashcardGrades).toEqual({ 'concept-0': 'known' });
+  });
+
+  it('updates the index with setFlashcardIndex', () => {
+    transcriptManager.setFlashcardIndex(2);
+    expect(transcriptManager.flashcardIndex).toBe(2);
+  });
+
+  it('resets index and grades without rebuilding the deck', () => {
+    const deck = transcriptManager.ensureFlashcardsDeck(summary);
+    transcriptManager.gradeFlashcard('concept-0', 'again');
+    transcriptManager.setFlashcardIndex(1);
+
+    transcriptManager.resetFlashcards();
+
+    expect(transcriptManager.flashcardIndex).toBe(0);
+    expect(transcriptManager.flashcardGrades).toEqual({});
+    expect(transcriptManager.flashcardDeck).toBe(deck);
+  });
+
+  it('clears all flashcard state and restores the transcript tab', async () => {
+    await transcriptManager.loadAssetSummary('asset-1');
+    transcriptManager.ensureFlashcardsDeck(transcriptManager.summaryData!);
+    transcriptManager.setActiveTab('flashcards');
+    transcriptManager.gradeFlashcard('concept-0', 'known');
+
+    transcriptManager.clear();
+
+    expect(transcriptManager.flashcardDeck).toBeNull();
+    expect(transcriptManager.flashcardIndex).toBe(0);
+    expect(transcriptManager.flashcardGrades).toEqual({});
+    expect(transcriptManager.activeTab).toBe('transcript');
   });
 });

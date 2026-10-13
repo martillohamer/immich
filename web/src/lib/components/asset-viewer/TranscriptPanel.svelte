@@ -1,6 +1,7 @@
 <script lang="ts">
   import { transcriptManager } from '$lib/stores/transcript.svelte';
   import GroupTab from '$lib/elements/GroupTab.svelte';
+  import FlashcardPanel from './FlashcardPanel.svelte';
   import SummaryPanel from './SummaryPanel.svelte';
   import { t } from 'svelte-i18n';
 
@@ -31,8 +32,20 @@
   });
 
   $effect(() => {
-    if (activeTab === 'summary' && status === 'success' && transcript && summaryData === null && !isGeneratingSummary) {
+    if (
+      (activeTab === 'summary' || activeTab === 'flashcards') &&
+      status === 'success' &&
+      transcript &&
+      summaryData === null &&
+      !isGeneratingSummary
+    ) {
       void transcriptManager.loadAssetSummary(assetId);
+    }
+  });
+
+  $effect(() => {
+    if (activeTab === 'flashcards' && summaryData) {
+      transcriptManager.ensureFlashcardsDeck(summaryData, assetName);
     }
   });
 
@@ -65,7 +78,11 @@
   class="fixed inset-x-0 bottom-0 z-40 mt-2 max-h-[30vh] overflow-y-auto border-t border-immich-gray/30 bg-immich-bg/95 backdrop-blur-sm"
   bind:this={scrollContainer}
   role="region"
-  aria-label={activeTab === 'summary' ? $t('smart_class_summary_title') : $t('transcript_title')}
+  aria-label={activeTab === 'summary'
+    ? $t('smart_class_summary_title')
+    : activeTab === 'flashcards'
+      ? $t('smart_class_flashcards_title')
+      : $t('transcript_title')}
   onwheel={handleScrollStart}
   ontouchmove={handleScrollStart}
 >
@@ -80,12 +97,12 @@
     {#if status === 'success' && transcript}
       <div class="flex justify-end">
         <GroupTab
-          filters={['transcript', 'summary']}
-          labels={[$t('transcript_title'), $t('smart_class_summary_title')]}
+          filters={['transcript', 'summary', 'flashcards']}
+          labels={[$t('transcript_title'), $t('smart_class_summary_title'), $t('smart_class_flashcards_title')]}
           selected={activeTab}
           label={$t('smart_class_notes_viewer_tabs')}
           loading={isGeneratingSummary}
-          onSelect={(tab) => transcriptManager.setActiveTab(tab as 'transcript' | 'summary')}
+          onSelect={(tab) => transcriptManager.setActiveTab(tab as 'transcript' | 'summary' | 'flashcards')}
         />
       </div>
     {/if}
@@ -98,12 +115,14 @@
       <div data-testid="transcript-error" class="text-sm text-red-600">{$t('transcript_error')}</div>
     {:else if activeTab === 'summary'}
       <SummaryPanel
-        summaryData={summaryData}
+        {summaryData}
         loading={isGeneratingSummary}
         onRetry={() => void transcriptManager.loadAssetSummary(assetId)}
         {assetId}
         {assetName}
       />
+    {:else if activeTab === 'flashcards'}
+      <FlashcardPanel {assetId} onRetry={() => void transcriptManager.loadAssetSummary(assetId)} />
     {:else if transcript}
       <div class="flex flex-col gap-1">
         {#each transcript.segments as segment, index (index)}

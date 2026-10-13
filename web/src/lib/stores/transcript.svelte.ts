@@ -1,7 +1,8 @@
 import type { TranscriptionResponseDto } from '@immich/sdk';
 import { assetCacheManager } from '$lib/managers/AssetCacheManager.svelte';
+import type { FlashcardDeck, FlashcardGrade, SummaryData } from '$lib/types/transcript';
 import { CancellableTask } from '$lib/utils/cancellable-task';
-import type { SummaryData } from '$lib/types/transcript';
+import { buildFlashcardDeck } from '$lib/utils/transcript-flashcards';
 import { createMockSummary } from '$lib/utils/transcript-summary';
 
 export const isNotFound = (error: unknown) => {
@@ -16,13 +17,18 @@ export class TranscriptManager {
     this.#status = isNotFound(error) ? 'empty' : 'error';
   });
 
-  #activeTab = $state<'transcript' | 'summary'>('transcript');
+  #activeTab = $state<'transcript' | 'summary' | 'flashcards'>('transcript');
   #summaryData = $state<SummaryData | null>(null);
   #isGeneratingSummary = $state(false);
   #summaryCleared = false;
   #summaryLoader = new CancellableTask(undefined, undefined, () => {
     this.#isGeneratingSummary = false;
   });
+
+  #flashcardDeck: FlashcardDeck | null = null;
+  #flashcardSourceSummary: SummaryData | null = null;
+  #flashcardIndex = 0;
+  #flashcardGrades: Partial<Record<string, FlashcardGrade>> = {};
 
   get transcript() {
     return this.#data;
@@ -44,6 +50,18 @@ export class TranscriptManager {
     return this.#isGeneratingSummary;
   }
 
+  get flashcardDeck(): FlashcardDeck | null {
+    return this.#flashcardDeck;
+  }
+
+  get flashcardIndex() {
+    return this.#flashcardIndex;
+  }
+
+  get flashcardGrades() {
+    return this.#flashcardGrades;
+  }
+
   async getAssetTranscript(id: string) {
     if (this.#cleared) {
       await this.#loader.reset();
@@ -55,8 +73,32 @@ export class TranscriptManager {
     }, false);
   }
 
-  setActiveTab(tab: 'transcript' | 'summary') {
+  setActiveTab(tab: 'transcript' | 'summary' | 'flashcards') {
     this.#activeTab = tab;
+  }
+
+  ensureFlashcardsDeck(summaryData: SummaryData, assetName?: string): FlashcardDeck {
+    if (this.#flashcardSourceSummary === summaryData && this.#flashcardDeck) {
+      return this.#flashcardDeck;
+    }
+    this.#flashcardDeck = buildFlashcardDeck(summaryData, assetName);
+    this.#flashcardSourceSummary = summaryData;
+    this.#flashcardGrades = {};
+    this.#flashcardIndex = 0;
+    return this.#flashcardDeck;
+  }
+
+  gradeFlashcard(cardId: string, grade: FlashcardGrade) {
+    this.#flashcardGrades = { ...this.#flashcardGrades, [cardId]: grade };
+  }
+
+  setFlashcardIndex(index: number) {
+    this.#flashcardIndex = index;
+  }
+
+  resetFlashcards() {
+    this.#flashcardIndex = 0;
+    this.#flashcardGrades = {};
   }
 
   async loadAssetSummary(assetId: string) {
@@ -83,6 +125,10 @@ export class TranscriptManager {
     this.#summaryData = null;
     this.#isGeneratingSummary = false;
     this.#activeTab = 'transcript';
+    this.#flashcardDeck = null;
+    this.#flashcardSourceSummary = null;
+    this.#flashcardIndex = 0;
+    this.#flashcardGrades = {};
   }
 }
 
