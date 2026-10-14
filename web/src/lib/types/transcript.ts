@@ -26,3 +26,24 @@ export type FlashcardDeck = {
   title: string;
   cards: Flashcard[];
 };
+
+export type ChatRole = 'user' | 'assistant';
+
+export type ChatCitation = {
+  timestampStart: number;
+  timestampEnd: number;
+  textSnippet: string;
+};
+
+export type ChatMessage = {
+  id: string;
+  role: ChatRole;
+  content: string;
+  timestamp: number;
+  citations?: ChatCitation[];
+};
+
+export type ChatSession = {
+  assetId: string;
+  messages: ChatMessage[];
+};
