@@ -93,6 +93,11 @@ describe('summary state', () => {
     expect(transcriptManager.activeTab).toBe('transcript');
   });
 
+  it('switches to the chat tab', () => {
+    transcriptManager.setActiveTab('chat');
+    expect(transcriptManager.activeTab).toBe('chat');
+  });
+
   it('marks generating during load and clears it on completion', async () => {
     const loading = transcriptManager.loadAssetSummary('asset-1');
 
