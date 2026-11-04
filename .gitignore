@@ -27,3 +27,17 @@ vite.config.js.timestamp-*
 .devcontainer/.env*
 *.tsbuildinfo
 *.tsbuildInfo
+
+# Python virtual environments
+.venv
+.venv-linux
+machine-learning/.venv*
+machine-learning/.venv-linux*
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Python caches
+.pytest_cache/
+.coverage
+htmlcov/
