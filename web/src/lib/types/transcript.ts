@@ -47,3 +47,40 @@ export type ChatSession = {
   assetId: string;
   messages: ChatMessage[];
 };
+
+export type QuizOption = {
+  id: string;
+  text: string;
+};
+
+export type QuizQuestion = {
+  id: string;
+  question: string;
+  options: QuizOption[];
+  correctOptionId: string;
+  explanation: string;
+  conceptTerm?: string;
+};
+
+export type QuizResult = {
+  questionId: string;
+  selectedOptionId: string;
+  isCorrect: boolean;
+  timeSpentSeconds?: number;
+};
+
+export type QuizSession = {
+  assetId: string;
+  questions: QuizQuestion[];
+  answers: Record<string, string>;
+  submitted: boolean;
+  score: number;
+};
+
+export type ObsidianExportOptions = {
+  includeFrontmatter: boolean;
+  includeCallouts: boolean;
+  includeTranscript: boolean;
+  includeQuizHistory: boolean;
+  tags: string[];
+};

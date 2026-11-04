@@ -17,7 +17,7 @@ export class TranscriptManager {
     this.#status = isNotFound(error) ? 'empty' : 'error';
   });
 
-  #activeTab = $state<'transcript' | 'summary' | 'flashcards' | 'chat'>('transcript');
+  #activeTab = $state<'transcript' | 'summary' | 'flashcards' | 'chat' | 'quiz'>('transcript');
   #summaryData = $state<SummaryData | null>(null);
   #isGeneratingSummary = $state(false);
   #summaryCleared = false;
@@ -73,7 +73,7 @@ export class TranscriptManager {
     }, false);
   }
 
-  setActiveTab(tab: 'transcript' | 'summary' | 'flashcards' | 'chat') {
+  setActiveTab(tab: 'transcript' | 'summary' | 'flashcards' | 'chat' | 'quiz') {
     this.#activeTab = tab;
   }
 
