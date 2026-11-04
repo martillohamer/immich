@@ -1,10 +1,10 @@
 import '@testing-library/jest-dom';
 import { render, screen, waitFor } from '@testing-library/svelte';
-import { albumFactory } from '@test-data/factories/album-factory';
+import { beforeEach, vi } from 'vitest';
 import { sdkMock } from '$lib/__mocks__/sdk.mock';
 import { eventManager } from '$lib/managers/event-manager.svelte';
 import { invalidateAlbumStatistics } from '$lib/services/album-statistics.service';
-import { beforeEach, vi } from 'vitest';
+import { albumFactory } from '@test-data/factories/album-factory';
 import AlbumFilterTabs from './AlbumFilterTabs.svelte';
 
 const defaultProps = {

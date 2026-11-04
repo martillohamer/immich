@@ -901,11 +901,11 @@ describe('TimelineManager', () => {
       let resolveSecond!: (value: { count: number; timeBucket: string }[]) => void;
 
       const firstRequest = new Promise<{ count: number; timeBucket: string }[]>((resolve) => (resolveFirst = resolve));
-      const secondRequest = new Promise<{ count: number; timeBucket: string }[]>((resolve) => (resolveSecond = resolve));
+      const secondRequest = new Promise<{ count: number; timeBucket: string }[]>(
+        (resolve) => (resolveSecond = resolve),
+      );
 
-      sdkMock.getTimeBuckets
-        .mockReturnValueOnce(firstRequest)
-        .mockReturnValueOnce(secondRequest);
+      sdkMock.getTimeBuckets.mockReturnValueOnce(firstRequest).mockReturnValueOnce(secondRequest);
 
       const firstUpdate = timelineManager.updateOptions({ albumId: 'album-a' });
       await tick();

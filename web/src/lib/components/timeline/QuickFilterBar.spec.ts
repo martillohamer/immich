@@ -1,7 +1,7 @@
+import { AssetTypeEnum, AssetVisibility } from '@immich/sdk';
 import '@testing-library/jest-dom';
 import { render, screen, waitFor } from '@testing-library/svelte';
 import { init, register, waitLocale } from 'svelte-i18n';
-import { AssetTypeEnum, AssetVisibility } from '@immich/sdk';
 import { sdkMock } from '$lib/__mocks__/sdk.mock';
 import { invalidateTimelineStats } from '$lib/services/asset-statistics.service';
 import QuickFilterBar from './QuickFilterBar.svelte';
