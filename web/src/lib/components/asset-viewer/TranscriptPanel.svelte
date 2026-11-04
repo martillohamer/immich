@@ -1,10 +1,12 @@
 <script lang="ts">
-  import { transcriptManager } from '$lib/stores/transcript.svelte';
-  import GroupTab from '$lib/elements/GroupTab.svelte';
-  import FlashcardPanel from './FlashcardPanel.svelte';
-  import RagChatPanel from './RagChatPanel.svelte';
-  import SummaryPanel from './SummaryPanel.svelte';
-  import { t } from 'svelte-i18n';
+import { transcriptManager } from '$lib/stores/transcript.svelte';
+import { quizManager } from '$lib/stores/quiz.svelte';
+import GroupTab from '$lib/elements/GroupTab.svelte';
+import FlashcardPanel from './FlashcardPanel.svelte';
+import QuizPanel from './QuizPanel.svelte';
+import RagChatPanel from './RagChatPanel.svelte';
+import SummaryPanel from './SummaryPanel.svelte';
+import { t } from 'svelte-i18n';
 
   let {
     assetId,
@@ -12,12 +14,14 @@
     currentTime,
     duration: _,
     onSeek,
+    onExportObsidian,
   }: {
     assetId: string;
     assetName?: string;
     currentTime: number;
     duration: number;
     onSeek: (time: number) => void;
+    onExportObsidian?: () => void;
   } = $props();
 
   let transcript = $derived(transcriptManager.transcript);
@@ -32,6 +36,7 @@
     summary: 'smart_class_summary_title',
     flashcards: 'smart_class_flashcards_title',
     chat: 'smart_class_chat_title',
+    quiz: 'smart_class_quiz_title',
   } as const;
 
   $effect(() => {
@@ -101,17 +106,18 @@
     {#if status === 'success' && transcript}
       <div class="flex justify-end">
         <GroupTab
-          filters={['transcript', 'summary', 'flashcards', 'chat']}
+          filters={['transcript', 'summary', 'flashcards', 'chat', 'quiz']}
           labels={[
             $t('transcript_title'),
             $t('smart_class_summary_title'),
             $t('smart_class_flashcards_title'),
             $t('smart_class_chat_title'),
+            $t('smart_class_quiz_title'),
           ]}
           selected={activeTab}
           label={$t('smart_class_notes_viewer_tabs')}
           loading={isGeneratingSummary}
-          onSelect={(tab) => transcriptManager.setActiveTab(tab as 'transcript' | 'summary' | 'flashcards' | 'chat')}
+          onSelect={(tab) => transcriptManager.setActiveTab(tab as 'transcript' | 'summary' | 'flashcards' | 'chat' | 'quiz')}
         />
       </div>
     {/if}
@@ -134,6 +140,8 @@
       <FlashcardPanel {assetId} onRetry={() => void transcriptManager.loadAssetSummary(assetId)} />
     {:else if activeTab === 'chat'}
       <RagChatPanel {assetId} {currentTime} {onSeek} />
+    {:else if activeTab === 'quiz'}
+      <QuizPanel {assetId} onRetry={() => void transcriptManager.loadAssetSummary(assetId)} />
     {:else if transcript}
       <div class="flex flex-col gap-1">
         {#each transcript.segments as segment, index (index)}

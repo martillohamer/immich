@@ -18,7 +18,7 @@ vi.mock(import('$lib/stores/rag-chat.svelte'), () => ({
 type ManagerState = {
   status: 'loading' | 'empty' | 'error' | 'success';
   transcript: TranscriptionResponseDto | null;
-  activeTab: 'transcript' | 'summary' | 'flashcards' | 'chat';
+  activeTab: 'transcript' | 'summary' | 'flashcards' | 'chat' | 'quiz';
   summaryData: SummaryData | null;
   isGeneratingSummary: boolean;
   flashcardDeck: FlashcardDeck | null;
@@ -61,7 +61,7 @@ vi.mock(import('$lib/stores/transcript.svelte'), () => ({
       return factory.manager.flashcardIndex;
     },
     getAssetTranscript: vi.fn(),
-    setActiveTab: vi.fn((tab: 'transcript' | 'summary' | 'flashcards' | 'chat') => {
+    setActiveTab: vi.fn((tab: 'transcript' | 'summary' | 'flashcards' | 'chat' | 'quiz') => {
       factory.manager.activeTab = tab;
     }),
     loadAssetSummary: vi.fn(),
@@ -166,11 +166,12 @@ describe('TranscriptPanel', () => {
       onSeek: vi.fn(),
     });
     const radios = getAllByRole('radio') as HTMLInputElement[];
-    expect(radios).toHaveLength(4);
+    expect(radios).toHaveLength(5);
     expect(radios[0].checked).toBe(true);
     expect(radios[1].checked).toBe(false);
     expect(radios[2].checked).toBe(false);
     expect(radios[3].checked).toBe(false);
+    expect(radios[4].checked).toBe(false);
   });
 
   it('calls setActiveTab with summary when the summary tab is clicked', async () => {
@@ -286,7 +287,7 @@ describe('TranscriptPanel flashcards tab', () => {
       onSeek: vi.fn(),
     });
     const radios = getAllByRole('radio') as HTMLInputElement[];
-    expect(radios).toHaveLength(4);
+    expect(radios).toHaveLength(5);
     await fireEvent.change(radios[2]);
     expect(vi.mocked(transcriptManager.setActiveTab)).toHaveBeenCalledWith('flashcards');
   });
@@ -349,5 +350,47 @@ describe('TranscriptPanel chat tab', () => {
     });
     expect(getByTestId('rag-chat-empty')).toBeInTheDocument();
     expect(getByRole('region')).toHaveAttribute('aria-label', 'smart_class_chat_title');
+  });
+});
+
+describe('TranscriptPanel quiz tab', () => {
+  beforeEach(() => {
+    Element.prototype.scrollIntoView = vi.fn();
+    factory.manager = { ...defaultManager };
+  });
+
+  afterEach(() => {
+    factory.manager = { ...defaultManager };
+    vi.clearAllMocks();
+  });
+
+  it('renders the quiz panel and sets the region aria-label when the quiz tab is active', () => {
+    factory.manager = {
+      ...defaultManager,
+      status: 'success',
+      transcript,
+      activeTab: 'quiz',
+    };
+    const { getByTestId, getByRole } = render(TranscriptPanel, {
+      assetId: 'asset-1',
+      currentTime: 0,
+      duration: 5,
+      onSeek: vi.fn(),
+    });
+    expect(getByTestId('quiz-empty')).toBeInTheDocument();
+    expect(getByRole('region')).toHaveAttribute('aria-label', 'smart_class_quiz_title');
+  });
+
+  it('calls setActiveTab with quiz when the quiz tab is clicked', async () => {
+    factory.manager = { ...defaultManager, status: 'success', transcript };
+    const { getAllByRole } = render(TranscriptPanel, {
+      assetId: 'asset-1',
+      currentTime: 0,
+      duration: 5,
+      onSeek: vi.fn(),
+    });
+    const radios = getAllByRole('radio') as HTMLInputElement[];
+    await fireEvent.change(radios[4]);
+    expect(vi.mocked(transcriptManager.setActiveTab)).toHaveBeenCalledWith('quiz');
   });
 });
