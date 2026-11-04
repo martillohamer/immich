@@ -52,7 +52,12 @@
   aria-busy={loading}
   class="flex items-center gap-1 rounded-full border border-gray-200 p-1 dark:border-immich-dark-gray dark:bg-immich-dark-bg"
 >
-  <button type="button" aria-pressed={isActive(undefined)} onclick={() => onSelect(undefined)} class={pillClass(undefined)}>
+  <button
+    type="button"
+    aria-pressed={isActive(undefined)}
+    onclick={() => onSelect(undefined)}
+    class={pillClass(undefined)}
+  >
     <Icon icon={mdiViewGridOutline} size="16" />
     {$t('all')}
     {#if loading && isActive(undefined)}
