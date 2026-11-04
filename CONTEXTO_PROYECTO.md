@@ -102,18 +102,36 @@ En este tenedor del repositorio se ha avanzado en el plan de desarrollo personal
   - `gh` no está instalado o autenticado en el entorno local actual. Las operaciones de GitHub vía CLI se realizan mediante `git` estándar con remotos HTTPS/SSH configurados.
 - **Formato de Archivos (CRLF/LF)**:
   - Advertencias puntuales de conversión LF a CRLF en Git debido a entorno Windows. Se recomienda configurar `.gitattributes` con `* text=auto eol=lf`.
-- **Archivos sin rastrear en docs/superpowers**:
-  - Los planes y specs de `docs/superpowers/` no están rastreados por Git según la convención del proyecto. Se propone no incluir `docs/superpowers/` ni `.superpowers/` en el repositorio.
+
+---
+
+## 6.1 Verificación del RAG Companion
+
+**Fecha de verificación**: 2026-11-04
+
+**Archivos de test verificados**:
+- `web/src/lib/utils/transcript-rag.spec.ts`
+- `web/src/lib/stores/rag-chat.svelte.spec.ts`
+- `web/src/lib/components/asset-viewer/RagChatPanel.spec.ts`
+- `web/src/lib/stores/transcript.svelte.spec.ts`
+- `web/src/lib/components/asset-viewer/TranscriptPanel.spec.ts`
+
+**Resultados**:
+- Tests ejecutados: 65
+- Tests pasados: 65
+- Resultado: ✓ Todos los tests pasan
+- Comprobación de tipos: `tsc --noEmit` sin errores
+
+Las 4 tareas del RAG Companion están completas y verificadas.
 
 ---
 
 ## 7. Próximos Pasos Recomendados
 
-1. **Tarea 5 - Verificación de regresión del RAG Companion**:
-   - Ejecutar tests específicos de RAG/transcript y verificación de tipos.
-   - Actualizar `progress.md` con el estado real de las tareas.
-2. **Configuración del entorno**:
-   - Actualizar `.gitignore` para excluir `docs/superpowers/`, `.superpowers/`, `.venv/`, `.venv-linux/`.
-   - Configurar `.gitattributes` para normalizar saltos de línea.
+1. **Configuración del entorno**:
+   - Actualizar `.gitignore` para excluir `.venv/`, `.venv-linux/`, y cachés de Python.
+   - Considerar `.gitattributes * text=auto eol=lf` para normalizar saltos de línea.
+2. **Documentación y Versionado**:
+   - Añadir planes y specs de `docs/superpowers/` al repositorio (archivos de texto pequeños).
 3. **Creación de Pull Request para el Contexto**:
    - La rama `docs/contexto-proyecto` ya está subida. Abrir PR para documentar el contexto del proyecto.
