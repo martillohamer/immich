@@ -44,10 +44,10 @@ En este tenedor del repositorio se ha avanzado en el plan de desarrollo personal
   - Exportación en Markdown de resúmenes (`214c9d7`).
   - Componente de resúmenes `SummaryPanel` (`cf13340`).
 - **Compañero RAG In-Context (Fase 1.2)**:
-  - Motor RAG puro y tipos de chat en frontend (`9337ad6`).
-  - Gestor de sesiones de chat RAG (`dfa19d0`).
-  - Panel de chat de contexto `RagChatPanel` (`50a1873`).
-  - Integración del visor de transcripción con pestaña de chat interactivo (`5b601b0`).
+  - Motor RAG puro y tipos de chat en frontend (`9337ad6`) - **Tarea 1 ✓**
+  - Gestor de sesiones de chat RAG (`dfa19d0`) - **Tarea 2 ✓**
+  - Panel de chat de contexto `RagChatPanel` (`50a1873`) - **Tarea 3 ✓**
+  - Integración del visor de transcripción con pestaña de chat interactivo (`5b601b0`) - **Tarea 4 ✓**
   - Pausa de workflows de CI (`cc1794f`).
 
 ---
@@ -101,16 +101,19 @@ En este tenedor del repositorio se ha avanzado en el plan de desarrollo personal
 - **Autenticación GitHub (CLI)**:
   - `gh` no está instalado o autenticado en el entorno local actual. Las operaciones de GitHub vía CLI se realizan mediante `git` estándar con remotos HTTPS/SSH configurados.
 - **Formato de Archivos (CRLF/LF)**:
-  - Advertencias puntuales de conversión LF a CRLF en Git debido a entorno Windows.
-- **Archivos Modificados Pendientes**:
-  - Existen modificaciones sin confirmar en componentes de Svelte (`AlbumFilterTabs`, `QuickFilterBar`, `GroupTab`, etc.) y utilidades de backend/test. Se deben aislar o revisar antes de proceder con nuevos desarrollos de características.
+  - Advertencias puntuales de conversión LF a CRLF en Git debido a entorno Windows. Se recomienda configurar `.gitattributes` con `* text=auto eol=lf`.
+- **Archivos sin rastrear en docs/superpowers**:
+  - Los planes y specs de `docs/superpowers/` no están rastreados por Git según la convención del proyecto. Se propone no incluir `docs/superpowers/` ni `.superpowers/` en el repositorio.
 
 ---
 
 ## 7. Próximos Pasos Recomendados
 
-1. **Completar la Integración RAG In-Context (Tarea 4 & 5)**:
-   - Integrar la 4ª pestaña en `transcript.svelte.ts` / `TranscriptPanel.svelte`.
-   - Ejecutar la verificación de regresión completa (`check:all` o suite de tests `vitest`).
-2. **Creación de Pull Request para el Contexto**:
-   - Subir la rama `docs/contexto-proyecto` al remoto origin y abrir la PR correspondiente en GitHub.
+1. **Tarea 5 - Verificación de regresión del RAG Companion**:
+   - Ejecutar tests específicos de RAG/transcript y verificación de tipos.
+   - Actualizar `progress.md` con el estado real de las tareas.
+2. **Configuración del entorno**:
+   - Actualizar `.gitignore` para excluir `docs/superpowers/`, `.superpowers/`, `.venv/`, `.venv-linux/`.
+   - Configurar `.gitattributes` para normalizar saltos de línea.
+3. **Creación de Pull Request para el Contexto**:
+   - La rama `docs/contexto-proyecto` ya está subida. Abrir PR para documentar el contexto del proyecto.
