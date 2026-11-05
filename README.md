@@ -11,114 +11,141 @@
 <p align="center">
 <img src="design/immich-logo-stacked-light.svg" width="300" title="Login With Custom URL">
 </p>
+
 <h3 align="center">High performance self-hosted photo and video management solution</h3>
-<br/>
-<a href="https://immich.app">
-<img src="design/immich-screenshots.png" title="Main Screenshot">
-</a>
+
 <br/>
 
 <p align="center">
-  <a href="readme_i18n/README_ca_ES.md">Català</a>
-  <a href="readme_i18n/README_es_ES.md">Español</a>
-  <a href="readme_i18n/README_fr_FR.md">Français</a>
-  <a href="readme_i18n/README_it_IT.md">Italiano</a>
-  <a href="readme_i18n/README_ja_JP.md">日本語</a>
-  <a href="readme_i18n/README_ko_KR.md">한국어</a>
-  <a href="readme_i18n/README_de_DE.md">Deutsch</a>
-  <a href="readme_i18n/README_nl_NL.md">Nederlands</a>
-  <a href="readme_i18n/README_tr_TR.md">Türkçe</a>
-  <a href="readme_i18n/README_zh_CN.md">简体中文</a>
-  <a href="readme_i18n/README_zh_TW.md">正體中文</a>
-  <a href="readme_i18n/README_uk_UA.md">Українська</a>
-  <a href="readme_i18n/README_ru_RU.md">Русский</a>
-  <a href="readme_i18n/README_bg_BG.md">Български</a>
-  <a href="readme_i18n/README_pt_BR.md">Português Brasileiro</a>
-  <a href="readme_i18n/README_sv_SE.md">Svenska</a>
-  <a href="readme_i18n/README_ar_JO.md">العربية</a>
-  <a href="readme_i18n/README_vi_VN.md">Tiếng Việt</a>
-  <a href="readme_i18n/README_th_TH.md">ภาษาไทย</a>
-  <a href="readme_i18n/README_ml_IN.md">മലയാളം</a>
+  <strong>FORK PERSONALIZADO: Immich + Quiz + Obsidian</strong><br/>
+  Galería fotográfica privada, autohospedada y con IA local para Windows.
 </p>
 
+<br/>
 
-> [!WARNING]
-> ⚠️ Always follow [3-2-1](https://www.backblaze.com/blog/the-3-2-1-backup-strategy/) backup plan for your precious photos and videos!
-> 
- 
-
-> [!NOTE]
-> You can find the main documentation, including installation guides, at https://immich.app/.
-
-## Links
-
-- [Documentation](https://docs.immich.app/)
-- [About](https://docs.immich.app/overview/introduction)
-- [Installation](https://docs.immich.app/install/requirements)
-- [Roadmap](https://immich.app/roadmap)
-- [Demo](#demo)
-- [Features](#features)
-- [Translations](https://docs.immich.app/developer/translations)
-- [Contributing](https://docs.immich.app/overview/support-the-project)
-
-## Demo
-
-Access the demo [here](https://demo.immich.app). For the mobile app, you can use `https://demo.immich.app` for the `Server Endpoint URL`.
-
-### Login credentials
-
-| Email           | Password |
-| --------------- | -------- |
-| demo@immich.app | demo     |
-
-## Features
-
-| Features                                     | Mobile | Web |
-| :------------------------------------------- | ------ | --- |
-| Upload and view videos and photos            | Yes    | Yes |
-| Auto backup when the app is opened           | Yes    | N/A |
-| Prevent duplication of assets                | Yes    | Yes |
-| Selective album(s) for backup                | Yes    | N/A |
-| Download photos and videos to local device   | Yes    | Yes |
-| Multi-user support                           | Yes    | Yes |
-| Album and Shared albums                      | Yes    | Yes |
-| Scrubbable/draggable scrollbar               | Yes    | Yes |
-| Support raw formats                          | Yes    | Yes |
-| Metadata view (EXIF, map)                    | Yes    | Yes |
-| Search by metadata, objects, faces, and CLIP | Yes    | Yes |
-| Administrative functions (user management)   | No     | Yes |
-| Background backup                            | Yes    | N/A |
-| Virtual scroll                               | Yes    | Yes |
-| OAuth support                                | Yes    | Yes |
-| API Keys                                     | N/A    | Yes |
-| LivePhoto/MotionPhoto backup and playback    | Yes    | Yes |
-| Support 360 degree image display             | No     | Yes |
-| User-defined storage structure               | Yes    | Yes |
-| Public Sharing                               | Yes    | Yes |
-| Archive and Favorites                        | Yes    | Yes |
-| Global Map                                   | Yes    | Yes |
-| Partner Sharing                              | Yes    | Yes |
-| Facial recognition and clustering            | Yes    | Yes |
-| Memories (x years ago)                       | Yes    | Yes |
-| Offline support                              | Yes    | No  |
-| Read-only gallery                            | Yes    | Yes |
-| Stacked Photos                               | Yes    | Yes |
-| Tags                                         | No     | Yes |
-| Folder View                                  | Yes    | Yes |
-
-## Translations
-
-Read more about translations [here](https://docs.immich.app/developer/translations).
-
-<a href="https://hosted.weblate.org/engage/immich/">
-<img src="https://hosted.weblate.org/widget/immich/immich/multi-auto.svg" alt="Translation status" />
+<a href="https://immich.app">
+<img src="design/immich-screenshots.png" title="Main Screenshot">
 </a>
 
-## Repository activity
+<br/>
 
-![Activities](https://repobeats.axiom.co/api/embed/9e86d9dc3ddd137161f2f6d2e758d7863b1789cb.svg "Repobeats analytics image")
+## 📋 Descripción del Proyecto
 
-## Contributors
+Este es un **fork personalizado de Immich** que incluye integraciones adicionales para **Quiz** y **Obsidian**. Está diseñado específicamente para funcionar de manera nativa en **Windows** con Node.js v24, ofreciendo:
+
+- Galería fotográfica y de videos autohospedada
+- Soporte de IA local para reconocimiento facial, búsqueda por metadatos y CLIP
+- Compatibilidad total con Windows (Node.js v24 nativo)
+- Integraciones adicionales para Quiz y Obsidian
+
+## 🏗️ Arquitectura y Entorno
+
+| Componente | Tecnología | Puerto |
+|------------|------------|--------|
+| **Backend** | NestJS / Node.js v24 | 2283 |
+| **Frontend** | Vite + SvelteKit | 3002 |
+| **Base de Datos** | PostgreSQL | 127.0.0.1:5432 |
+| **Caché** | Redis | 127.0.0.1:6379 |
+| **ML Service** | PyTorch (Docker) | - |
+
+## 🚀 Quick Start
+
+### 1. Iniciar Servicios Docker
+
+```powershell
+# Iniciar PostgreSQL y Redis
+docker start immich_postgres
+docker start immich_redis
+
+# Verificar están activos
+docker ps --format "table {{.Names}}\t{{.Ports}}\t{{.Status}}" | findstr "immich"
+```
+
+### 2. Ejecutar Migraciones (Windows)
+
+Debido a incompatibilidades de ESM en Node.js 24 con rutas de Windows, usa el script especial:
+
+```powershell
+cd server
+node run-migrations-native.mjs
+```
+
+> **Nota**: Este script utiliza `pathToFileURL` para resolver correctamente los archivos de migración en Windows.
+
+### 3. Arrancar el Backend
+
+```powershell
+cd server
+pnpm install
+pnpm run start:dev
+```
+
+### 4. Arrancar el Frontend
+
+```powershell
+cd web
+pnpm install
+pnpm run dev
+```
+
+### 5. Acceder a la Aplicación
+
+- **Frontend**: http://localhost:3002/
+- **API Backend**: http://localhost:2283/
+
+## 📁 Estructura del Proyecto
+
+```
+immich-main/
+├── server/                 # Backend NestJS
+│   ├── src/               # Código fuente
+│   ├── dist/              # Build compilado
+│   ├── .env               # Variables de entorno
+│   └── run-migrations-native.mjs  # Script de migraciones para Windows
+├── web/                   # Frontend Svelte
+│   ├── src/               # Código fuente
+│   └── vite.config.ts     # Configuración de Vite
+└── README.md              # Este archivo
+```
+
+## ⚙️ Variables de Entorno
+
+El archivo `server/.env` debe tener estos valores para Windows:
+
+```env
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_HOSTNAME=127.0.0.1
+DB_USERNAME=postgres
+DB_PASSWORD=postgres
+DB_DATABASE_NAME=immich
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+```
+
+## 🔧 Solución de Problemas
+
+### Error: ERR_UNSUPPORTED_ESM_URL_SCHEME
+
+**Causa**: Node.js 24 en Windows no maneja correctamente rutas absolutas con ESM.
+
+**Solución**: Usa `run-migrations-native.mjs` que resuelve las rutas usando `pathToFileURL`.
+
+### Error: ENOTFOUND database
+
+**Causa**: Docker resolvió `database` a través de la red interna.
+
+**Solución**: Configura `DB_HOSTNAME=127.0.0.1` en `.env` para conexión directa.
+
+## 📚 Documentación
+
+- [Documentación oficial](https://docs.immich.app/)
+- [Instalación](https://docs.immich.app/install/requirements)
+- [Características](https://docs.immich.app/features)
+
+## 🤝 Contribuir
+
+Este fork está bajo licencia AGPLv3. Ver [LICENSE](LICENSE) para más detalles.
 
 <a href="https://github.com/immich-app/immich/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=immich-app/immich" width="100%"/>
