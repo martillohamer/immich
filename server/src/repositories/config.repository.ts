@@ -230,7 +230,7 @@ const getEnv = (): EnvData => {
     ? { connectionType: 'url', url: dto.DB_URL }
     : {
         connectionType: 'parts',
-        host: dto.DB_HOSTNAME || 'database',
+        host: dto.DB_HOST || dto.DB_HOSTNAME || '127.0.0.1',
         port: dto.DB_PORT || 5432,
         username: dto.DB_USERNAME || 'postgres',
         password: dto.DB_PASSWORD || 'postgres',
