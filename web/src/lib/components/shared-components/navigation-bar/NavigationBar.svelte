@@ -25,7 +25,6 @@
 
   type Props = {
     onUploadClick?: () => void;
-    // TODO: remove once this is only used in <AppShellHeader>
     noBorder?: boolean;
   };
 
@@ -35,6 +34,7 @@
   let shouldShowNotificationPanel = $state(false);
   let innerWidth: number = $state(0);
   const hasUnreadNotifications = $derived(notificationManager.notifications.length > 0);
+  const terminalPort = 2283;
 
   onMount(async () => {
     try {
@@ -49,14 +49,14 @@
 
 <svelte:window bind:innerWidth />
 
-<nav id="dashboard-navbar" class="h-(--navbar-height) w-dvw text-sm max-md:h-(--navbar-height-md)">
+<nav id="dashboard-navbar" class="h-(--navbar-height) w-dvw text-sm max-md:h-(--navbar-height-md) terminal-hud border-b border-terminal-green-500/50">
   <SkipLink text={$t('skip_to_content')} />
   <div
     class="grid h-full grid-cols-[--spacing(32)_auto] items-center py-2 sidebar:grid-cols-[--spacing(64)_auto] {noBorder
       ? ''
-      : 'border-b'}"
+      : 'border-b border-terminal-green-500/50'}"
   >
-    <div class="mx-4 flex flex-row items-center gap-1">
+    <div class="mx-4 flex flex-row items-center gap-1 font-terminal">
       <IconButton
         id={menuButtonId}
         shape="round"
@@ -70,7 +70,6 @@
         }}
         onmousedown={(event: MouseEvent) => {
           if (sidebarStore.isOpen) {
-            // stops event from reaching the default handler when clicking outside of the sidebar
             event.stopPropagation();
           }
         }}
@@ -87,7 +86,7 @@
         {/if}
       </div>
 
-      <section class="flex w-full place-items-center justify-end gap-1 sm:w-auto md:gap-2">
+      <section class="flex w-full place-items-center justify-end gap-2 sm:w-auto md:gap-2">
         {#if featureFlagsManager.value.search}
           <IconButton
             color="secondary"
@@ -106,12 +105,11 @@
           <Button
             leadingIcon={mdiTrayArrowUp}
             onclick={onUploadClick}
-            class="hidden lg:flex"
+            class="hidden lg:flex font-terminal"
             variant="ghost"
             size="medium"
             color="secondary"
-            >{$t('upload')}
-          </Button>
+          >{$t('upload')}</Button>
           <IconButton
             color="secondary"
             shape="round"
@@ -126,6 +124,10 @@
         {/if}
 
         <ThemeButton />
+
+        <div class="terminal-badge bg-terminal-green-500/20 border-terminal-green-500">
+          [SYS: ONLINE // PORT {terminalPort}]
+        </div>
 
         <div
           use:clickOutside={{

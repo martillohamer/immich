@@ -6,6 +6,15 @@
 
 @custom-variant dark (&:where(.dark, .dark *):not(.light));
 
+@theme {
+  --color-terminal-green-500: #00ff66;
+  --color-terminal-green-400: #00e65c;
+  --color-deep-carbon-800: #0a0c10;
+  --color-deep-carbon-700: #12161f;
+  --color-deep-carbon-900: #05070a;
+  --font-mono: 'JetBrains Mono', 'ui-monospace', 'monospace';
+}
+
 @theme inline {
   --color-immich-primary: rgb(var(--immich-primary));
   --color-immich-bg: rgb(var(--immich-bg));
@@ -20,7 +29,7 @@
 
 @theme {
   --font-sans: 'GoogleSans', sans-serif;
-  --font-mono: 'GoogleSansCode', monospace;
+  --font-mono: 'JetBrains Mono', 'GoogleSansCode', 'ui-monospace', monospace;
 
   --spacing-18: 4.5rem;
 
@@ -101,6 +110,22 @@
     font-style: monospace;
   }
 
+  @font-face {
+    font-family: 'JetBrains Mono';
+    src: url('https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@latest/files/jetbrains-mono-latin-400-normal.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: 'JetBrains Mono';
+    src: url('https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@latest/files/jetbrains-mono-latin-700-normal.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
+
   :root {
     font-family: var(--font-sans);
     letter-spacing: 0.1px;
@@ -176,5 +201,68 @@
 
   .maplibregl-popup-content {
     @apply bg-subtle rounded-lg;
+  }
+}
+
+@layer base {
+  @keyframes terminalCursor {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+
+  .terminal-hud {
+    @apply border border-terminal-green-500 bg-deep-carbon-800/50;
+    box-shadow: 0 0 10px rgba(0, 255, 102, 0.2);
+    backdrop-filter: blur(5px);
+  }
+
+  .terminal-badge {
+    @apply bg-terminal-green-500 text-deep-carbon-900 font-mono text-xs font-bold px-2 py-0.5 rounded-sm border border-terminal-green-400;
+  }
+
+  .terminal-status {
+    @apply font-mono text-sm text-terminal-green-400;
+  }
+
+  .terminal-border-accent {
+    @apply border-terminal-green-500;
+  }
+
+  .photo-card-terminal {
+    @apply border border-terminal-green-500/30 bg-deep-carbon-800/30 rounded-sm hover:border-terminal-green-500 transition-all duration-200;
+  }
+
+  .sidebar-terminal {
+    @apply bg-deep-carbon-800 border-e border-terminal-green-500/30;
+  }
+
+  .nav-item-terminal {
+    @apply font-mono text-sm hover:text-terminal-green-400 hover:bg-terminal-green-500/5;
+  }
+}
+
+@layer utilities {
+  .font-terminal {
+    font-family: var(--font-mono);
+  }
+
+  .text-terminal {
+    color: #00ff66;
+  }
+
+  .bg-terminal {
+    background-color: #00ff66;
+  }
+
+  .border-terminal-accent {
+    border-color: #00ff66;
+  }
+
+  .terminal-glow {
+    box-shadow: 0 0 10px rgba(0, 255, 102, 0.3), 0 0 20px rgba(0, 255, 102, 0.1);
+  }
+
+  .terminal-glow-hover:hover {
+    box-shadow: 0 0 20px rgba(0, 255, 102, 0.5), 0 0 40px rgba(0, 255, 102, 0.2);
   }
 }

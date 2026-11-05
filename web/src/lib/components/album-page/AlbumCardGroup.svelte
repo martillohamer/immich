@@ -51,20 +51,20 @@
     <button
       type="button"
       onclick={() => toggleAlbumGroupCollapsing(group.id)}
-      class="mt-2 w-full cursor-pointer rounded-md py-2 pe-2 text-start transition-colors hover:bg-subtle hover:text-primary dark:text-immich-dark-fg dark:hover:bg-immich-dark-gray"
+      class="mt-2 w-full cursor-pointer rounded-sm py-2 pe-2 text-start transition-colors hover:bg-terminal-green-500/10 hover:text-terminal-green-400 font-terminal terminal-status"
       aria-expanded={!isCollapsed}
     >
       <Icon icon={mdiChevronRight} size="24" class="-mt-2.5 inline-block transition-all duration-250 {iconRotation}" />
-      <span class="text-3xl font-bold text-black dark:text-white">{group.name}</span>
+      <span class="text-lg font-bold text-white terminal-status">{group.name}</span>
       <span class="ms-1.5">({$t('albums_count', { values: { count: albums.length } })})</span>
     </button>
-    <hr class="dark:border-immich-dark-gray" />
+    <hr class="border-terminal-green-500/30" />
   </div>
 {/if}
 
 <div class="mt-4">
   {#if !isCollapsed}
-    <div class="grid grid-auto-fill-56 gap-y-4" transition:slide={{ duration: 300 }}>
+    <div class="grid grid-auto-fill-56 gap-y-4 font-terminal" transition:slide={{ duration: 300 }}>
       {#each albums as album, index (album.id)}
         {@const { Edit, Share, Download, Delete } = getAlbumActions($t, album)}
         {@const items = [Edit, Share, Download, Delete]}

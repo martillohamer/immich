@@ -8,7 +8,7 @@ import path from 'node:path';
 
 const upstream = {
   target: process.env.IMMICH_SERVER_URL || 'http://localhost:2283/',
-  secure: true,
+  secure: false,
   changeOrigin: true,
   logLevel: 'info',
   ws: true,

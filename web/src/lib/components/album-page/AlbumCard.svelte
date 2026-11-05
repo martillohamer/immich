@@ -26,7 +26,7 @@
 </script>
 
 <div
-  class="group relative rounded-2xl border border-transparent p-5 hover:border-gray-200 hover:bg-gray-100 dark:hover:border-gray-800 dark:hover:bg-gray-900"
+  class="group relative rounded-sm border border-terminal-green-500/30 bg-deep-carbon-800/50 p-4 hover:border-terminal-green-500 hover:bg-deep-carbon-700 transition-all duration-200 photo-card-terminal font-terminal"
   data-testid="album-card"
 >
   {#if contextMenuItems}
@@ -49,7 +49,7 @@
 
   <div class="mt-4">
     <p
-      class="line-clamp-2 w-full text-lg/6 font-semibold wrap-break-word text-black group-hover:text-primary dark:text-white"
+      class="line-clamp-2 w-full text-sm/5 font-semibold wrap-break-word text-white group-hover:text-terminal-green-400 font-terminal"
       data-testid="album-name"
       title={album.albumName}
     >
@@ -57,12 +57,12 @@
     </p>
 
     {#if showDateRange && album.startDate && album.endDate}
-      <p class="flex text-sm capitalize dark:text-immich-dark-fg">
+      <p class="flex text-xs capitalize text-terminal-green-400 font-mono">
         {getShortDateRange(album.startDate, album.endDate)}
       </p>
     {/if}
 
-    <span class="flex gap-2 text-sm dark:text-immich-dark-fg" data-testid="album-details">
+    <span class="flex gap-2 text-xs text-terminal-green-400 font-mono" data-testid="album-details">
       {#if showItemCount}
         <p>
           {$t('items_count', { values: { count: album.assetCount } })}

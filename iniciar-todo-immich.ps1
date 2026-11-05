@@ -1,27 +1,49 @@
 # =====================================================================
-# Script Maestro de Arranque - Immich (Fork Quiz + Obsidian)
-# Entorno Nativo Windows [Tag: martillo-martillohamer]
+# SYSTEM LAUNCHER T-800 - IMMICH NATIVE WINDOWS ENVIRONMENT
 # =====================================================================
-
-Write-Host "=====================================================" -ForegroundColor Cyan
-Write-Host "  INICIANDO INFRAESTRUCTURA COMPLETA DE IMMICH...     " -ForegroundColor Cyan
-Write-Host "=====================================================" -ForegroundColor Cyan
-
-# 1. Encender contenedores de Docker (PostgreSQL y Redis)
-Write-Host "[1/3] Encendiendo servicios Docker (PostgreSQL y Redis)..." -ForegroundColor Yellow
-docker start immich_postgres
-docker start immich_redis
-
-# 2. Levantar el Backend (NestJS) en una nueva ventana con las variables de entorno protegidas
-Write-Host "[2/3] Lanzando el Backend (NestJS en puerto 2283)..." -ForegroundColor Yellow
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd server; `$env:DB_HOST='127.0.0.1'; `$env:DB_HOSTNAME='127.0.0.1'; `$env:REDIS_HOST='127.0.0.1'; pnpm run start:dev"
-
-# 3. Levantar el Frontend (Vite) en otra nueva ventana
-Write-Host "[3/3] Lanzando el Frontend (Vite en puerto 3002)..." -ForegroundColor Yellow
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd web; pnpm run dev"
-
 Write-Host "=====================================================" -ForegroundColor Green
-Write-Host "  ¡TODO EN MARCHA CON ÉXITO!                          " -ForegroundColor Green
-Write-Host "  - Backend API: http://localhost:2283               " -ForegroundColor White
-Write-Host "  - Frontend Web: http://localhost:3002              " -ForegroundColor White
+Write-Host "   INITIATING T-800 CYBER-TERMINAL IMMICH SYSTEM    " -ForegroundColor Cyan
+Write-Host "=====================================================" -ForegroundColor Green
+
+$ROOT_DIR = "C:\Users\astur\Desktop\immich-main"
+
+# 1. VERIFICAR Y ARRANCAR DOCKER CONTAINERS
+Write-Host "`n[SYS 1/3] Verificando contenedores de Docker (Postgres & Redis)..." -ForegroundColor Yellow
+try {
+    docker start immich_postgres immich_redis | Out-Null
+    Write-Host "[OK] Contenedores immich_postgres e immich_redis activos." -ForegroundColor Green
+} catch {
+    Write-Host "[WARN] No se pudo iniciar Docker o los contenedores ya estan corriendo." -ForegroundColor Yellow
+}
+
+# 2. LIMPIEZA DE PUERTOS OCUPADOS (2283, 3001, 3002, 3003)
+Write-Host "`n[SYS 2/3] Liberando puertos 2283 y 3001-3003 de procesos huérfanos..." -ForegroundColor Yellow
+$PORTS = @(2283, 3001, 3002, 3003)
+foreach ($PORT in $PORTS) {
+    $PIDS = Get-NetTCPConnection -LocalPort $PORT -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique
+    if ($PIDS) {
+        foreach ($PID_TO_KILL in $PIDS) {
+            try {
+                Stop-Process -Id $PID_TO_KILL -Force -ErrorAction SilentlyContinue
+                Write-Host "[KILL] Puerto $PORT liberado (PID: $PID_TO_KILL)." -ForegroundColor Red
+            } catch {}
+        }
+    }
+}
+Write-Host "[OK] Puertos limpios y listos para enlace." -ForegroundColor Green
+
+# 3. ARRANCAR BACKEND Y FRONTEND EN PARALELO
+Write-Host "`n[SYS 3/3] Desplegando servicios NestJS Backend (2283) y Vite Frontend..." -ForegroundColor Cyan
+
+# Terminal Backend (NestJS)
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$ROOT_DIR\server'; Write-Host '--- STARTING NESTJS BACKEND (PORT 2283) ---' -ForegroundColor Green; pnpm run start:dev"
+
+# Esperar 3 segundos para estabilidad de inicio
+Start-Sleep -Seconds 3
+
+# Terminal Frontend (Vite)
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$ROOT_DIR\web'; Write-Host '--- STARTING VITE CYBER-TERMINAL FRONTEND ---' -ForegroundColor Cyan; pnpm run dev"
+
+Write-Host "`n=====================================================" -ForegroundColor Green
+Write-Host "   [SYSTEM READY] Accede a http://localhost:3001     " -ForegroundColor Green
 Write-Host "=====================================================" -ForegroundColor Green
