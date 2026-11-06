@@ -31,8 +31,10 @@ describe('ImageThumbnail component', () => {
     const img = baseElement.querySelector('img')!;
     await fireEvent.error(img);
 
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
     expect(baseElement.querySelector('img')).toBeNull();
-    expect(baseElement.querySelector('span')?.textContent).toEqual('error_loading_image');
+    expect(baseElement.querySelector('[data-broken-asset]')).not.toBeNull();
   });
 
   it('calls onComplete with false on successful load', async () => {

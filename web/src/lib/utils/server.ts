@@ -1,4 +1,4 @@
-import { setFetch } from '@immich/sdk';
+import { setRetryableFetch } from '@immich/sdk';
 import { memoize } from 'lodash-es';
 import { authManager } from '$lib/managers/auth-manager.svelte';
 import { featureFlagsManager } from '$lib/managers/feature-flags-manager.svelte';
@@ -8,10 +8,7 @@ import { initLanguage } from '$lib/utils';
 type Fetch = typeof fetch;
 
 async function _init(fetch: Fetch) {
-  // set event.fetch on the fetch-client used by @immich/sdk
-  // https://kit.svelte.dev/docs/load#making-fetch-requests
-  // https://github.com/oazapfts/oazapfts/blob/main/README.md#fetch-options
-  setFetch(fetch);
+  setRetryableFetch(fetch);
   await initLanguage();
   await serverConfigManager.init();
   await authManager.load();

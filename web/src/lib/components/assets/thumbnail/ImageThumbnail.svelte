@@ -88,7 +88,6 @@
 
 {#if hidden}
   <div class="absolute inset-s-1/2 top-1/2 translate-[-50%] transform">
-    <!-- TODO fix `title` type -->
     <Icon title={title ?? undefined} icon={mdiEyeOffOutline} size="2em" class={hiddenIconClass} />
   </div>
 {/if}

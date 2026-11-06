@@ -6,18 +6,42 @@ import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig, type ProxyOptions, type UserConfig } from 'vite';
 import path from 'node:path';
 
-const upstream = {
-  target: process.env.IMMICH_SERVER_URL || 'http://localhost:2283/',
-  secure: false,
-  changeOrigin: true,
-  logLevel: 'info',
-  ws: true,
-};
+const target = process.env.IMMICH_SERVER_URL || 'http://localhost:2283/';
 
-const proxy: Record<string, string | ProxyOptions> = {
-  '/api': upstream,
-  '/.well-known/immich': upstream,
-  '/custom.css': upstream,
+const proxyConfig: Record<string, ProxyOptions> = {
+  '/api': {
+    target,
+    secure: false,
+    changeOrigin: true,
+    ws: true,
+    timeout: 60000,
+    rewrite: (path) => path,
+    configure: (proxy, options) => {
+      proxy.on('proxyReq', (proxyReq, req) => {
+        proxyReq.setHeader('Accept', '*/*');
+        proxyReq.setHeader('Connection', 'keep-alive');
+      });
+      proxy.on('proxyRes', (proxyRes, req, res) => {
+        const ct = proxyRes.headers['content-type'];
+        if (ct && !ct.includes('json')) {
+          res.setHeader('Content-Type', ct);
+        }
+      });
+    },
+  },
+  '/.well-known/immich': {
+    target,
+    secure: false,
+    changeOrigin: true,
+    ws: true,
+    timeout: 60000,
+  },
+  '/custom.css': {
+    target,
+    secure: false,
+    changeOrigin: true,
+    timeout: 60000,
+  },
 };
 
 export default defineConfig({
@@ -27,18 +51,19 @@ export default defineConfig({
   resolve: {
     alias: {
       'xmlhttprequest-ssl': './node_modules/engine.io-client/lib/xmlhttprequest.js',
-      // eslint-disable-next-line unicorn/prefer-module
       '@test-data': path.resolve(import.meta.dirname, './src/test-data'),
-      // '@immich/ui': path.resolve(import.meta.dirname, '../../ui/packages/ui'),
     },
   },
   server: {
-    // connect to a remote backend during web-only development
-    proxy,
+    proxy: proxyConfig,
     allowedHosts: true,
+    watch: {
+      usePolling: true,
+      interval: 100,
+    },
   },
   preview: {
-    proxy,
+    proxy: proxyConfig,
   },
   plugins: [
     enhancedImages(),
@@ -68,4 +93,4 @@ export default defineConfig({
       TZ: 'UTC',
     },
   },
-} as UserConfig);
+}) satisfies UserConfig;

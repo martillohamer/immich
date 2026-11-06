@@ -41,3 +41,35 @@ export function isMalformedResponseError(
 ): error is MalformedResponseError {
   return error instanceof MalformedResponseError;
 }
+
+export interface RetryOptions {
+  maxAttempts: number;
+  baseDelayMs: number;
+  maxDelayMs: number;
+}
+
+export const defaultRetryOptions: RetryOptions = {
+  maxAttempts: 3,
+  baseDelayMs: 1000,
+  maxDelayMs: 10000,
+};
+
+export function isTransientNetworkError(error: unknown): boolean {
+  if (error instanceof MalformedResponseError) {
+    return error.status === 502 || error.status === 503 || error.status === 504;
+  }
+  if (error instanceof HttpError) {
+    const status = (error as HttpError).status;
+    return status === 502 || status === 503 || status === 504;
+  }
+  return true;
+}
+
+export function calculateDelay(attempt: number, options: RetryOptions): number {
+  const delay = options.baseDelayMs * Math.pow(2, attempt - 1);
+  return Math.min(delay, options.maxDelayMs);
+}
+
+export async function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}

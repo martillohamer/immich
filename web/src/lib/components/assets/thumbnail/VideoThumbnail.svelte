@@ -3,6 +3,7 @@
   import { Icon, LoadingSpinner } from '@immich/ui';
   import { mdiAlertCircleOutline, mdiPauseCircleOutline, mdiPlayCircleOutline } from '@mdi/js';
   import { Duration } from 'luxon';
+  import { onMount } from 'svelte';
   import type { ClassValue } from 'svelte/elements';
 
   interface Props {
@@ -31,7 +32,7 @@
 
   let remainingSeconds = $state(durationInSeconds);
   let loading = $state(true);
-  let error = $state(false);
+  let playbackError = $state(false);
   let player: HTMLVideoElement | undefined = $state();
 
   $effect(() => {
@@ -49,6 +50,15 @@
       video.load();
     };
   });
+
+  onMount(() => {
+    return () => {
+      if (player) {
+        player.pause();
+      }
+    };
+  });
+
   const onMouseEnter = () => {
     if (playbackOnIconHover) {
       enablePlayback = true;
@@ -60,9 +70,30 @@
       enablePlayback = false;
     }
   };
+
+  const handleVideoError = () => {
+    if (!player?.src) {
+      return;
+    }
+    loading = false;
+    playbackError = true;
+  };
+
+  const handleVideoLoadStart = () => {
+    loading = true;
+  };
+
+  const handleVideoCanPlay = () => {
+    loading = false;
+    playbackError = false;
+  };
 </script>
 
-{#if enablePlayback}
+{#if playbackError}
+  <div class="absolute inset-0 flex size-full items-center justify-center bg-gray-300/50 dark:bg-gray-700/50">
+    <Icon icon={mdiAlertCircleOutline} size="48" class="text-red-500" />
+  </div>
+{:else if enablePlayback}
   <video
     bind:this={player}
     class={cleanClass('h-full w-full object-cover', className)}
@@ -71,21 +102,11 @@
     autoplay
     loop
     src={url}
-    onplay={() => {
-      loading = false;
-      error = false;
-    }}
-    onerror={() => {
-      if (!player?.src) {
-        // Do not show error when the URL is empty.
-        return;
-      }
-      error = true;
-      loading = false;
-    }}
+    onplay={handleVideoCanPlay}
+    onerror={handleVideoError}
+    onloadstart={handleVideoLoadStart}
     ontimeupdate={({ currentTarget }) => {
-      const remaining = currentTarget.duration - currentTarget.currentTime;
-      remainingSeconds = Math.min(Math.ceil(Number.isNaN(remaining) ? Infinity : remaining), durationInSeconds);
+      remainingSeconds = Math.min(Math.ceil(Number.isNaN(currentTarget.duration - currentTarget.currentTime) ? Infinity : currentTarget.duration - currentTarget.currentTime), durationInSeconds);
     }}
   ></video>
 {/if}
@@ -114,7 +135,7 @@
     {#if enablePlayback}
       {#if loading}
         <LoadingSpinner size="large" />
-      {:else if error}
+      {:else if playbackError}
         <Icon icon={mdiAlertCircleOutline} size="24" class="text-red-600" />
       {:else}
         <Icon icon={pauseIcon} size="24" />
